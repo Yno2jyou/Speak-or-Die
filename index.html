@@ -1876,6 +1876,31 @@
   });
 
 
+  /* Always show the very top when opening the site itself */
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+  function forcePageTop() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+  /* prevent initial #hash jump; in-page links still work after load */
+  if (window.location.hash) {
+    try {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    } catch (e) {}
+  }
+  forcePageTop();
+  window.addEventListener("load", function () {
+    forcePageTop();
+    setTimeout(forcePageTop, 0);
+    setTimeout(forcePageTop, 50);
+  });
+  window.addEventListener("pageshow", function () {
+    forcePageTop();
+  });
+
   function start() {
     createSkyStars();
     setTimeout(function () {
