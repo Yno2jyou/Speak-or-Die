@@ -1632,8 +1632,37 @@
 </footer>
 
 
+
+
 <script>
 (function () {
+  /* ---- independent twinkling stars ---- */
+  function createSkyStars() {
+    var n = 55;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < n; i++) {
+      var el = document.createElement("span");
+      el.className = "sky-star";
+      var size = Math.random() < 0.18 ? (1.4 + Math.random() * 0.8) : (0.7 + Math.random() * 0.7);
+      el.style.width = size + "px";
+      el.style.height = size + "px";
+      el.style.left = (Math.random() * 100) + "vw";
+      el.style.top = (Math.random() * 100) + "vh";
+      if (size > 1.3) {
+        el.style.boxShadow = "0 0 " + (1 + Math.random()) + "px rgba(220,230,255,0.35)";
+      }
+      var duration = 2.5 + Math.random() * 6.5;
+      var delay = -Math.random() * duration;
+      el.style.animationDuration = duration + "s";
+      el.style.animationDelay = delay + "s";
+      el.style.setProperty("--dim", String(0.08 + Math.random() * 0.18));
+      el.style.setProperty("--bright", String(0.35 + Math.random() * 0.45));
+      frag.appendChild(el);
+    }
+    document.body.appendChild(frag);
+  }
+
+  /* ---- shooting stars ---- */
   function spawnShootingStar() {
     var star = document.createElement("div");
     star.className = "shooting-star";
@@ -1652,21 +1681,78 @@
     }, 1500);
   }
 
-  function scheduleNext() {
+  function scheduleShootingStars() {
     var delay = 5000 + Math.random() * 9000;
     setTimeout(function () {
       spawnShootingStar();
       if (Math.random() < 0.15) {
         setTimeout(spawnShootingStar, 350 + Math.random() * 500);
       }
-      scheduleNext();
+      scheduleShootingStars();
     }, delay);
   }
 
+  /* ---- smooth in-page navigation ---- */
+  function ease(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function animateScroll(toY, ms) {
+    var fromY = window.scrollY || window.pageYOffset || 0;
+    var delta = toY - fromY;
+    if (Math.abs(delta) < 1) return;
+    var t0 = null;
+    function frame(now) {
+      if (t0 === null) t0 = now;
+      var p = Math.min(1, (now - t0) / ms);
+      window.scrollTo(0, fromY + delta * ease(p));
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener("click", function (ev) {
+    var node = ev.target;
+    var link = null;
+    while (node && node !== document) {
+      if (node.tagName === "A") {
+        link = node;
+        break;
+      }
+      node = node.parentNode;
+    }
+    if (!link) return;
+
+    var href = link.getAttribute("href") || "";
+    if (href.charAt(0) !== "#") return;
+    var id = href.substring(1);
+    if (!id) return;
+
+    var target = document.getElementById(id);
+    if (!target) return;
+
+    ev.preventDefault();
+
+    var top = target.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - 16;
+    var dist = Math.abs(top - (window.scrollY || window.pageYOffset || 0));
+    var ms = Math.min(1500, Math.max(450, dist * 0.5));
+
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.scrollTo(0, top);
+    } else {
+      animateScroll(top, ms);
+    }
+
+    try {
+      history.pushState(null, "", "#" + id);
+    } catch (err) {}
+  }, false);
+
   function start() {
+    createSkyStars();
     setTimeout(function () {
       spawnShootingStar();
-      scheduleNext();
+      scheduleShootingStars();
     }, 2000 + Math.random() * 2000);
   }
 
@@ -1675,95 +1761,6 @@
   } else {
     start();
   }
-})();
-</script>
-
-
-<script>
-(function () {
-  function createSkyStars() {
-    var n = 55;
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < n; i++) {
-      var el = document.createElement("span");
-      el.className = "sky-star";
-      var size = Math.random() < 0.18 ? (1.4 + Math.random() * 0.8) : (0.7 + Math.random() * 0.7);
-      el.style.width = size + "px";
-      el.style.height = size + "px";
-      el.style.left = (Math.random() * 100) + "vw";
-      el.style.top = (Math.random() * 100) + "vh";
-      // soft glow only on a few
-      if (size > 1.3) {
-        el.style.boxShadow = "0 0 " + (1 + Math.random()) + "px rgba(220,230,255,0.35)";
-      }
-      // independent cycle: 2.5s〜9s, random phase
-      var duration = 2.5 + Math.random() * 6.5;
-      var delay = -Math.random() * duration; // negative = already mid-cycle
-      el.style.animationDuration = duration + "s";
-      el.style.animationDelay = delay + "s";
-      // per-star brightness range (keep overall dim)
-      var dim = 0.08 + Math.random() * 0.18;
-      var bright = 0.35 + Math.random() * 0.45;
-      el.style.setProperty("--dim", String(dim));
-      el.style.setProperty("--bright", String(bright));
-      frag.appendChild(el);
-    }
-    document.body.appendChild(frag);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", createSkyStars);
-  } else {
-    createSkyStars();
-  }
-})();
-</script>
-
-
-<script>
-(function () {
-  function prefersReducedMotion() {
-    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-
-  function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
-
-  function smoothScrollTo(targetY, duration) {
-    var startY = window.pageYOffset || document.documentElement.scrollTop;
-    var diff = targetY - startY;
-    if (Math.abs(diff) < 2) return;
-    var start = null;
-    function step(ts) {
-      if (!start) start = ts;
-      var p = Math.min(1, (ts - start) / duration);
-      window.scrollTo(0, startY + diff * easeInOutCubic(p));
-      if (p < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-
-  document.addEventListener("click", function (e) {
-    var a = e.target.closest("a[href^=\'#\']");
-    if (!a) return;
-    var id = a.getAttribute("href").slice(1);
-    if (!id) return;
-    var el = document.getElementById(id);
-    if (!el) return;
-    e.preventDefault();
-    if (prefersReducedMotion()) {
-      el.scrollIntoView();
-    } else {
-      var y = el.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop) - 12;
-      var distance = Math.abs(y - (window.pageYOffset || 0));
-      var duration = Math.min(1400, Math.max(500, distance * 0.45));
-      smoothScrollTo(y, duration);
-    }
-    if (history.pushState) {
-      history.pushState(null, "", "#" + id);
-    }
-  });
 })();
 </script>
 
