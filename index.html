@@ -21,6 +21,10 @@
 
   * { box-sizing: border-box; }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
@@ -1712,6 +1716,54 @@
   } else {
     createSkyStars();
   }
+})();
+</script>
+
+
+<script>
+(function () {
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function smoothScrollTo(targetY, duration) {
+    var startY = window.pageYOffset || document.documentElement.scrollTop;
+    var diff = targetY - startY;
+    if (Math.abs(diff) < 2) return;
+    var start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min(1, (ts - start) / duration);
+      window.scrollTo(0, startY + diff * easeInOutCubic(p));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a[href^=\'#\']");
+    if (!a) return;
+    var id = a.getAttribute("href").slice(1);
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    if (prefersReducedMotion()) {
+      el.scrollIntoView();
+    } else {
+      var y = el.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop) - 12;
+      var distance = Math.abs(y - (window.pageYOffset || 0));
+      var duration = Math.min(1400, Math.max(500, distance * 0.45));
+      smoothScrollTo(y, duration);
+    }
+    if (history.pushState) {
+      history.pushState(null, "", "#" + id);
+    }
+  });
 })();
 </script>
 
