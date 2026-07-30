@@ -206,7 +206,7 @@
 
   #toc {
     max-width: var(--max-width);
-    margin: 0 auto 64px;
+    margin: 0 auto 48px;
     padding: 0 20px;
   }
   #toc summary {
@@ -216,24 +216,74 @@
     color: var(--fg-dim);
     cursor: pointer;
     letter-spacing: 0.1em;
+    list-style: none;
+    outline: none;
   }
+  #toc summary::-webkit-details-marker { display: none; }
+  #toc summary::marker { content: ""; }
   #toc ol {
     list-style: none;
-    padding: 0;
-    margin: 20px 0 0;
+    padding: 12px 0 8px;
+    margin: 12px 0 0;
     font-size: 13px;
-    line-height: 2;
+    line-height: 2.05;
+    border-top: 1px solid var(--line);
   }
-  #toc a { border-bottom: none; color: var(--fg); opacity: 0.75; }
+  #toc li {
+    margin: 0;
+    padding: 0;
+  }
+  #toc a {
+    border-bottom: none;
+    color: var(--fg);
+    opacity: 0.8;
+    display: block;
+    padding: 2px 0;
+  }
   #toc a:hover { opacity: 1; color: var(--accent); }
 
   @media (max-width: 480px) {
-    header { padding: 48px 16px 20px; }
+    header { padding: 40px 16px 16px; }
     .site-title { font-size: 18px; }
-    main { padding: 0 16px 100px; }
+    main { padding: 0 16px 80px; }
     :root {
       --body-size: 14.5px;
       --leading: 1.95;
+    }
+    #toc {
+      margin: 0 auto 24px;
+      padding: 0 16px;
+    }
+    #toc ol {
+      font-size: 12.5px;
+      line-height: 1.95;
+      max-height: none;
+      overflow: visible;
+      padding: 8px 4px 4px;
+      margin-top: 8px;
+    }
+    #toc a {
+      opacity: 0.9;
+      padding: 4px 0;
+    }
+    .section { margin-top: 48px; }
+    .section:first-child { margin-top: 0; }
+    .section-title {
+      margin-bottom: 28px;
+      padding-bottom: 12px;
+    }
+    /* iOS: fixed background causes blank gaps while scrolling */
+    body {
+      background-attachment: scroll;
+      min-height: 100%;
+      min-height: -webkit-fill-available;
+    }
+    html {
+      height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+    body {
+      overflow-x: hidden;
     }
   }
     15%  { width: 70px; opacity: 1; }
@@ -1780,10 +1830,39 @@
     if (!target) return;
 
     ev.preventDefault();
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    /* close TOC panel so it does not leave a large empty region above the chapter */
+    var toc = document.getElementById("toc");
+    if (toc && toc.tagName === "DETAILS") {
+      toc.open = false;
+    }
+
+    /* defer scroll until details collapse has applied */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
 
     if (window.history && window.history.pushState) {
       window.history.pushState(null, "", href);
+    }
+  });
+
+
+  /* close TOC after choosing a chapter (esp. mobile) */
+  document.addEventListener("click", function (ev) {
+    var link = ev.target;
+    while (link && link.nodeName !== "A") {
+      link = link.parentElement;
+    }
+    if (!link) return;
+    var href = link.getAttribute("href") || "";
+    if (href.charAt(0) !== "#") return;
+    var toc = document.getElementById("toc");
+    if (toc && toc.contains(link) && toc.open) {
+      // delay slightly so scroll target is resolved first
+      setTimeout(function () { toc.open = false; }, 80);
     }
   });
 
