@@ -1816,6 +1816,26 @@
     }, 5000 + Math.random() * 9000);
   }
 
+  function getAbsoluteTop(el) {
+    var y = 0;
+    while (el) {
+      y += el.offsetTop;
+      el = el.offsetParent;
+    }
+    return y;
+  }
+
+  function scrollToTargetTop(target, smooth) {
+    var y = Math.max(0, getAbsoluteTop(target) - 8);
+    var maxY = Math.max(0, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
+    if (y > maxY) y = maxY;
+    try {
+      window.scrollTo({ top: y, left: 0, behavior: smooth ? "smooth" : "auto" });
+    } catch (e) {
+      window.scrollTo(0, y);
+    }
+  }
+
   document.addEventListener("click", function (ev) {
     var link = ev.target;
     while (link && link.nodeName !== "A") {
@@ -1831,16 +1851,22 @@
 
     ev.preventDefault();
 
-    /* close TOC panel so it does not leave a large empty region above the chapter */
     var toc = document.getElementById("toc");
     if (toc && toc.tagName === "DETAILS") {
       toc.open = false;
     }
 
-    /* defer scroll until details collapse has applied */
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var mobile = window.matchMedia && window.matchMedia("(max-width: 480px)").matches;
+
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        scrollToTargetTop(target, !reduce);
+        if (mobile) {
+          /* re-snap to exact top after address bar / layout settles */
+          setTimeout(function () { scrollToTargetTop(target, false); }, 400);
+          setTimeout(function () { scrollToTargetTop(target, false); }, 800);
+        }
       });
     });
 
@@ -1849,22 +1875,6 @@
     }
   });
 
-
-  /* close TOC after choosing a chapter (esp. mobile) */
-  document.addEventListener("click", function (ev) {
-    var link = ev.target;
-    while (link && link.nodeName !== "A") {
-      link = link.parentElement;
-    }
-    if (!link) return;
-    var href = link.getAttribute("href") || "";
-    if (href.charAt(0) !== "#") return;
-    var toc = document.getElementById("toc");
-    if (toc && toc.contains(link) && toc.open) {
-      // delay slightly so scroll target is resolved first
-      setTimeout(function () { toc.open = false; }, 80);
-    }
-  });
 
   function start() {
     createSkyStars();
