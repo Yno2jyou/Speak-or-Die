@@ -22,7 +22,6 @@
   * { box-sizing: border-box; }
 
   html {
-    scroll-behavior: smooth;
   }
 
   html, body {
@@ -272,20 +271,29 @@
       margin-bottom: 28px;
       padding-bottom: 12px;
     }
-    /* iOS: fixed background causes blank gaps while scrolling */
-    body {
-      background-attachment: scroll;
-      min-height: 100%;
-      min-height: -webkit-fill-available;
-    }
     html {
-      height: -webkit-fill-available;
-      overflow-x: hidden;
+      scroll-behavior: auto;
+      overflow-x: clip;
+      height: auto;
     }
     body {
-      overflow-x: hidden;
+      background-attachment: scroll !important;
+      min-height: 100%;
+      overflow-x: clip;
+      /* reduce rubber-band chaining issues */
+      overscroll-behavior-y: none;
+    }
+    /* fixed layers can jitter scroll on iOS — keep stars but isolate */
+    body::before,
+    body::after,
+    .sky-star,
+    .shooting-star {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
   }
+
     15%  { width: 70px; opacity: 1; }
     70%  { width: 100px; opacity: 0.85; }
     100% { width: 20px; opacity: 0; }
@@ -1762,6 +1770,7 @@
 
 
 
+
 <script>
 (function () {
   function createSkyStars() {
@@ -1816,23 +1825,23 @@
     }, 5000 + Math.random() * 9000);
   }
 
-  function getAbsoluteTop(el) {
-    var y = 0;
-    while (el) {
-      y += el.offsetTop;
-      el = el.offsetParent;
-    }
-    return y;
-  }
+  var scrolling = false;
 
-  function scrollToTargetTop(target, smooth) {
-    var y = Math.max(0, getAbsoluteTop(target) - 8);
-    var maxY = Math.max(0, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
-    if (y > maxY) y = maxY;
-    try {
-      window.scrollTo({ top: y, left: 0, behavior: smooth ? "smooth" : "auto" });
-    } catch (e) {
-      window.scrollTo(0, y);
+  function scrollToEl(target) {
+    if (scrolling) return;
+    scrolling = true;
+    var top = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - 12;
+    var isTouch = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    if (isTouch) {
+      /* mobile: instant jump avoids smooth-scroll fighting touch momentum */
+      window.scrollTo(0, top);
+      scrolling = false;
+    } else if (typeof target.scrollIntoView === "function") {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(function () { scrolling = false; }, 900);
+    } else {
+      window.scrollTo(0, top);
+      scrolling = false;
     }
   }
 
@@ -1850,55 +1859,28 @@
     if (!target) return;
 
     ev.preventDefault();
+    ev.stopPropagation();
 
     var toc = document.getElementById("toc");
     if (toc && toc.tagName === "DETAILS") {
       toc.open = false;
     }
 
-    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var mobile = window.matchMedia && window.matchMedia("(max-width: 480px)").matches;
-
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        scrollToTargetTop(target, !reduce);
-        if (mobile) {
-          /* re-snap to exact top after address bar / layout settles */
-          setTimeout(function () { scrollToTargetTop(target, false); }, 400);
-          setTimeout(function () { scrollToTargetTop(target, false); }, 800);
-        }
-      });
-    });
-
+    /* update URL without letting the browser perform its own hash scroll */
     if (window.history && window.history.pushState) {
       window.history.pushState(null, "", href);
     }
-  });
 
+    setTimeout(function () {
+      scrollToEl(target);
+    }, 30);
+  }, false);
 
-  /* Always show the very top when opening the site itself */
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
-  function forcePageTop() {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  }
-  /* prevent initial #hash jump; in-page links still work after load */
-  if (window.location.hash) {
-    try {
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-    } catch (e) {}
-  }
-  forcePageTop();
-  window.addEventListener("load", function () {
-    forcePageTop();
-    setTimeout(forcePageTop, 0);
-    setTimeout(forcePageTop, 50);
-  });
-  window.addEventListener("pageshow", function () {
-    forcePageTop();
+  /* prevent browser from re-scrolling on hashchange / popstate unexpectedly */
+  window.addEventListener("hashchange", function (ev) {
+    if (scrolling) {
+      ev.preventDefault();
+    }
   });
 
   function start() {
@@ -1917,7 +1899,6 @@
 })();
 </script>
 
-
 <script>
 (function () {
   var btn = document.getElementById("afterword-btn");
@@ -1930,6 +1911,5 @@
   });
 })();
 </script>
-
 </body>
 </html>
