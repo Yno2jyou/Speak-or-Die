@@ -1634,9 +1634,10 @@
 
 
 
+
+
 <script>
 (function () {
-  /* ---- independent twinkling stars ---- */
   function createSkyStars() {
     var n = 55;
     var frag = document.createDocumentFragment();
@@ -1652,9 +1653,8 @@
         el.style.boxShadow = "0 0 " + (1 + Math.random()) + "px rgba(220,230,255,0.35)";
       }
       var duration = 2.5 + Math.random() * 6.5;
-      var delay = -Math.random() * duration;
       el.style.animationDuration = duration + "s";
-      el.style.animationDelay = delay + "s";
+      el.style.animationDelay = (-Math.random() * duration) + "s";
       el.style.setProperty("--dim", String(0.08 + Math.random() * 0.18));
       el.style.setProperty("--bright", String(0.35 + Math.random() * 0.45));
       frag.appendChild(el);
@@ -1662,7 +1662,6 @@
     document.body.appendChild(frag);
   }
 
-  /* ---- shooting stars ---- */
   function spawnShootingStar() {
     var star = document.createElement("div");
     star.className = "shooting-star";
@@ -1682,71 +1681,35 @@
   }
 
   function scheduleShootingStars() {
-    var delay = 5000 + Math.random() * 9000;
     setTimeout(function () {
       spawnShootingStar();
       if (Math.random() < 0.15) {
         setTimeout(spawnShootingStar, 350 + Math.random() * 500);
       }
       scheduleShootingStars();
-    }, delay);
-  }
-
-  /* ---- smooth in-page navigation ---- */
-  function ease(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
-
-  function animateScroll(toY, ms) {
-    var fromY = window.scrollY || window.pageYOffset || 0;
-    var delta = toY - fromY;
-    if (Math.abs(delta) < 1) return;
-    var t0 = null;
-    function frame(now) {
-      if (t0 === null) t0 = now;
-      var p = Math.min(1, (now - t0) / ms);
-      window.scrollTo(0, fromY + delta * ease(p));
-      if (p < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
+    }, 5000 + Math.random() * 9000);
   }
 
   document.addEventListener("click", function (ev) {
-    var node = ev.target;
-    var link = null;
-    while (node && node !== document) {
-      if (node.tagName === "A") {
-        link = node;
-        break;
-      }
-      node = node.parentNode;
+    var link = ev.target;
+    while (link && link.nodeName !== "A") {
+      link = link.parentElement;
     }
     if (!link) return;
 
-    var href = link.getAttribute("href") || "";
-    if (href.charAt(0) !== "#") return;
-    var id = href.substring(1);
-    if (!id) return;
+    var href = link.getAttribute("href");
+    if (!href || href.charAt(0) !== "#" || href.length < 2) return;
 
-    var target = document.getElementById(id);
+    var target = document.getElementById(href.substring(1));
     if (!target) return;
 
     ev.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    var top = target.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - 16;
-    var dist = Math.abs(top - (window.scrollY || window.pageYOffset || 0));
-    var ms = Math.min(1500, Math.max(450, dist * 0.5));
-
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      window.scrollTo(0, top);
-    } else {
-      animateScroll(top, ms);
+    if (window.history && window.history.pushState) {
+      window.history.pushState(null, "", href);
     }
-
-    try {
-      history.pushState(null, "", "#" + id);
-    } catch (err) {}
-  }, false);
+  });
 
   function start() {
     createSkyStars();
