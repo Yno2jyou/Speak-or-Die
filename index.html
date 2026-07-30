@@ -210,23 +210,15 @@
     max-width: var(--max-width);
     margin: 0 auto 48px;
     padding: 0 20px;
+    display: none;
   }
-  #toc summary {
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--fg-dim);
-    cursor: pointer;
-    letter-spacing: 0.1em;
-    list-style: none;
-    outline: none;
+  #toc.is-open {
+    display: block;
   }
-  #toc summary::-webkit-details-marker { display: none; }
-  #toc summary::marker { content: ""; }
   #toc ol {
     list-style: none;
     padding: 12px 0 8px;
-    margin: 12px 0 0;
+    margin: 0;
     font-size: 13px;
     line-height: 2.05;
     border-top: 1px solid var(--line);
@@ -262,7 +254,7 @@
       max-height: none;
       overflow: visible;
       padding: 8px 4px 4px;
-      margin-top: 8px;
+      margin-top: 0;
     }
     #toc a {
       opacity: 0.9;
@@ -461,8 +453,7 @@
   <a href="#toc">目次</a>
 </nav>
 
-<details id="toc">
-  <summary>目次を開く</summary>
+<div id="toc">
   <ol>
     <li><a href="#ch0">プロローグ</a></li>
     <li><a href="#ch1">第一話：また後で。</a></li>
@@ -483,7 +474,7 @@
     <li><a href="#ch16">第十六話：旅の終わり、日常の始まり</a></li>
     <li><a href="#ch17">第十七話：君が死んだら、僕も死ぬよ。</a></li>
   </ol>
-</details>
+</div>
 
 
 <main id="honbun">
@@ -1865,8 +1856,27 @@
     ev.stopPropagation();
 
     var toc = document.getElementById("toc");
-    if (toc && toc.tagName === "DETAILS") {
-      toc.open = false;
+
+    /* ナビの「目次」リンク：開閉トグル */
+    if (href === "#toc" && toc) {
+      var opening = !toc.classList.contains("is-open");
+      toc.classList.toggle("is-open", opening);
+      if (opening) {
+        if (window.history && window.history.pushState) {
+          window.history.pushState(null, "", href);
+        }
+        setTimeout(function () {
+          scrollToEl(toc);
+        }, 30);
+      } else if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      return;
+    }
+
+    /* 章リンクなど：目次を閉じてスクロール */
+    if (toc) {
+      toc.classList.remove("is-open");
     }
 
     /* update URL without letting the browser perform its own hash scroll */
