@@ -16,9 +16,9 @@
     --line: #333333;
     --font-body: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
     --font-mono: "MS PGothic", "Osaka-mono", monospace;
-    --max-width: 640px;
-    --body-size: 14.5px;
-    --leading: 2.1;
+    --max-width: 700px;
+    --body-size: 14px;
+    --leading: 1.85;
   }
 
   * { box-sizing: border-box; }
@@ -196,10 +196,10 @@
   main {
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: 0 44px 120px;
+    padding: 40px 24px 100px;
   }
 
-  .section { margin-top: 72px; }
+  .section { margin-top: 56px; }
   .section:first-child { margin-top: 0; }
 
   .section-title {
@@ -208,8 +208,8 @@
     color: var(--fg-dim);
     text-align: center;
     letter-spacing: 0.2em;
-    margin: 0 0 40px;
-    padding-bottom: 16px;
+    margin: 0 0 28px;
+    padding: 0 12px 12px;
     border-bottom: 1px solid var(--line);
   }
 
@@ -235,8 +235,8 @@
 
   #toc {
     max-width: var(--max-width);
-    margin: 0 auto 48px;
-    padding: 0 20px;
+    margin: 0 auto 28px;
+    padding: 0 24px;
     display: none;
   }
   #toc.is-open {
@@ -254,41 +254,17 @@
     margin: 0;
     padding: 0;
   }
-  #toc a {
-    border-bottom: none;
-    color: var(--fg);
-    opacity: 0.8;
-    display: block;
-    padding: 2px 0;
-  }
-  #toc a:hover { opacity: 1; color: var(--accent); }
+  #toc a { border-bottom: none; color: var(--fg); }
+  #toc a:hover { color: var(--accent); }
 
   @media (max-width: 480px) {
     header { padding: 40px 16px 16px; }
     .site-title { font-size: 18px; }
-    main { padding: 0 28px 80px; }
+    main { padding: 40px 16px 80px; }
     :root {
-      --body-size: 13px;
-      --leading: 1.95;
+      --body-size: 14px;
+      --leading: 1.85;
     }
-    #toc {
-      margin: 0 auto 24px;
-      padding: 0 16px;
-    }
-    #toc ol {
-      font-size: 12.5px;
-      line-height: 1.95;
-      max-height: none;
-      overflow: visible;
-      padding: 8px 4px 4px;
-      margin-top: 0;
-    }
-    #toc a {
-      opacity: 0.9;
-      padding: 4px 0;
-    }
-    .section { margin-top: 48px; }
-    .section:first-child { margin-top: 0; }
     .section-title {
       margin-bottom: 28px;
       padding-bottom: 12px;
@@ -907,6 +883,18 @@
     .site-menu-btn { top: 10px; right: 10px; width: 38px; height: 38px; }
   }
 
+  /* 目次の折り返し: 二行目を字下げ */
+  #toc a {
+    display: inline-block;
+    max-width: 100%;
+    line-height: 1.7;
+    word-break: keep-all;
+    line-break: strict;
+    padding-left: 6em;
+    text-indent: -6em;
+    box-sizing: border-box;
+  }
+  main p { letter-spacing: 0.03em; }
 </style>
 </head>
 <body>
