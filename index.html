@@ -3339,7 +3339,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       editBlocksToSections(mainEl);
       var prev = loadContent() || {};
       prev.mainHtml = mainEl.innerHTML;
-      if (awEl) prev.afterwordFullHtml = awEl.innerHTML;
+      if (awEl) { cleanAfterwordFormat(awEl); prev.afterwordFullHtml = awEl.innerHTML; }
       saveContent(prev);
       showSaveToast("保存完了！");
     } else {
@@ -3366,6 +3366,53 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 
   var awSnapshot = null;
   var awWasOpen = false;
+
+  /* あとがきの書式をサイト標準に揃える（貼り付け由来のフォント・色・サイズ等を除去） */
+  function cleanAfterwordFormat(root) {
+    if (!root) return;
+    var keepClass = { "aw-epigraph": 1, "indent": 1, "no-indent": 1 };
+    // 1) 不要な装飾タグを展開（エピグラフ内の span は維持）
+    var unwrapSel = "font, b, i, u, strong, em, s, strike, mark, a, h1, h2, h3, h4, h5, h6, ul, ol, li, table, tr, td, th, tbody, thead, section, article";
+    root.querySelectorAll(unwrapSel).forEach(function (el) {
+      var frag = document.createDocumentFragment();
+      while (el.firstChild) frag.appendChild(el.firstChild);
+      el.parentNode.replaceChild(frag, el);
+    });
+    root.querySelectorAll("span").forEach(function (el) {
+      if (el.closest(".aw-epigraph")) return;
+      var frag = document.createDocumentFragment();
+      while (el.firstChild) frag.appendChild(el.firstChild);
+      el.parentNode.replaceChild(frag, el);
+    });
+    // 2) 属性の除去（許可クラス以外）
+    root.querySelectorAll("*").forEach(function (el) {
+      Array.prototype.slice.call(el.attributes).forEach(function (a) {
+        if (a.name === "class") return;
+        el.removeAttribute(a.name);
+      });
+      var cls = (el.getAttribute("class") || "").split(/\s+/).filter(function (c) { return keepClass[c]; });
+      if (cls.length) el.setAttribute("class", cls.join(" "));
+      else el.removeAttribute("class");
+    });
+    // 3) 直下の div（エピグラフ以外）を p に、直下のテキストも p に包む
+    Array.prototype.slice.call(root.childNodes).forEach(function (n) {
+      if (n.nodeType === 3) {
+        var t = (n.textContent || "").trim();
+        if (!t) { root.removeChild(n); return; }
+        var p0 = document.createElement("p");
+        p0.textContent = t;
+        root.replaceChild(p0, n);
+      } else if (n.nodeType === 1 && n.tagName === "DIV" && !n.classList.contains("aw-epigraph")) {
+        var p1 = document.createElement("p");
+        while (n.firstChild) p1.appendChild(n.firstChild);
+        root.replaceChild(p1, n);
+      }
+    });
+    // 4) 空の段落を除去
+    root.querySelectorAll("p").forEach(function (el) {
+      if (!(el.textContent || "").trim() && !el.querySelector("br")) el.parentNode.removeChild(el);
+    });
+  }
   function enterBodyEdit() {
     closeManage();
     setRoute("read");
@@ -3409,8 +3456,20 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       awEl.hidden = false;
       awEl.classList.add("is-open");
       if (awBtn) awBtn.setAttribute("aria-expanded", "true");
+      cleanAfterwordFormat(awEl);
       awEl.setAttribute("contenteditable", "true");
       awEl.setAttribute("spellcheck", "false");
+      if (awEl.getAttribute("data-paste-bound") !== "1") {
+        awEl.setAttribute("data-paste-bound", "1");
+        awEl.addEventListener("paste", function (e) {
+          e.preventDefault();
+          var clip = e.clipboardData || window.clipboardData;
+          var text = clip ? clip.getData("text/plain") : "";
+          if (!text) return;
+          text = String(text).replace(/^#+\s+/gm, "");
+          document.execCommand("insertHTML", false, plainToParagraphs(text));
+        });
+      }
     }
 
     var jump = editToolbar.querySelector("#chapter-jump");
@@ -3484,6 +3543,13 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
         title.setAttribute("data-edit-bound", "1");
         title.setAttribute("contenteditable", "true");
         title.setAttribute("spellcheck", "false");
+        title.addEventListener("paste", function (e) {
+          e.preventDefault();
+          var clip = e.clipboardData || window.clipboardData;
+          var text = clip ? clip.getData("text/plain") : "";
+          text = String(text || "").replace(/\s+/g, " ").trim();
+          if (text) document.execCommand("insertText", false, text);
+        });
         function isImeComposing(ev) {
           return !!(ev && (ev.isComposing || ev.keyCode === 229));
         }
