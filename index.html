@@ -2816,7 +2816,9 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       var ss = document.querySelector(".site-subtitle");
       if (ss) ss.textContent = c.siteSub;
     }
-    if (c.afterwordHtml) {
+    if (c.afterwordFullHtml && document.getElementById("afterword-content")) {
+      document.getElementById("afterword-content").innerHTML = c.afterwordFullHtml;
+    } else if (c.afterwordHtml) {
       var aw = document.getElementById("afterword-content");
       if (aw) {
         // keep title + rebuild body paragraphs from stored html or text
@@ -2883,7 +2885,8 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       landingBtn: (document.getElementById("edit-landing-btn") || {}).value || "",
       siteTitle: (document.getElementById("edit-site-title") || {}).value || "",
       siteSub: (document.getElementById("edit-site-sub") || {}).value || "",
-      afterwordHtml: plainToAfterwordHtml((document.getElementById("edit-afterword") || {}).value || "")
+      afterwordHtml: plainToAfterwordHtml((document.getElementById("edit-afterword") || {}).value || ""),
+      afterwordFullHtml: ""
     };
   }
   function fillFormFromDom() {
@@ -3329,15 +3332,29 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 
   function exitBodyEdit(save) {
     if (!mainEl) return;
+    var awEl = document.getElementById("afterword-content");
+    var awBtn = document.getElementById("afterword-btn");
+    if (awEl) {
+      awEl.removeAttribute("contenteditable");
+      awEl.removeAttribute("spellcheck");
+    }
     if (save) {
       editBlocksToSections(mainEl);
       var prev = loadContent() || {};
       prev.mainHtml = mainEl.innerHTML;
+      if (awEl) prev.afterwordFullHtml = awEl.innerHTML;
       saveContent(prev);
       showSaveToast("保存完了！");
-    } else if (editSnapshot != null) {
-      mainEl.innerHTML = editSnapshot;
+    } else {
+      if (editSnapshot != null) mainEl.innerHTML = editSnapshot;
+      if (awEl && awSnapshot != null) awEl.innerHTML = awSnapshot;
     }
+    if (awEl && !awWasOpen) {
+      awEl.classList.remove("is-open");
+      awEl.hidden = true;
+      if (awBtn) awBtn.setAttribute("aria-expanded", "false");
+    }
+    awSnapshot = null;
     mainEl.classList.remove("is-editing");
     document.body.classList.remove("is-editing");
     mainEl.querySelectorAll("[contenteditable]").forEach(function (el) {
@@ -3350,6 +3367,8 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     editSnapshot = null;
   }
 
+  var awSnapshot = null;
+  var awWasOpen = false;
   function enterBodyEdit() {
     closeManage();
     setRoute("read");
@@ -3384,6 +3403,18 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 
     mainEl.classList.add("is-editing");
     document.body.classList.add("is-editing");
+
+    var awEl = document.getElementById("afterword-content");
+    var awBtn = document.getElementById("afterword-btn");
+    if (awEl) {
+      awSnapshot = awEl.innerHTML;
+      awWasOpen = awEl.classList.contains("is-open");
+      awEl.hidden = false;
+      awEl.classList.add("is-open");
+      if (awBtn) awBtn.setAttribute("aria-expanded", "true");
+      awEl.setAttribute("contenteditable", "true");
+      awEl.setAttribute("spellcheck", "false");
+    }
 
     var jump = editToolbar.querySelector("#chapter-jump");
 
