@@ -13,6 +13,7 @@
     --fg: #e8e8e8;
     --fg-dim: #888888;
     --accent: #6a8caf;
+    --accent-soft: rgba(106, 140, 175, 0.42);
     --line: #333333;
     --font-body: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
     --font-mono: "MS PGothic", "Osaka-mono", monospace;
@@ -302,83 +303,39 @@
   }
 
 
-  /* Shooting stars */
+  /* Shooting stars（site2 の演出を移植） */
   .shooting-star {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 2px;
-    height: 2px;
-    background: #fff;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 2;
-    opacity: 0;
-    box-shadow:
-      0 0 3px 1px rgba(255, 230, 210, 0.65),
-      0 0 8px 2px rgba(180, 160, 255, 0.25);
-    will-change: transform, opacity;
+    position: fixed; top: 0; left: 0; width: 2px; height: 2px; background: #fff;
+    border-radius: 50%; pointer-events: none; z-index: 2; opacity: 0;
+    box-shadow: 0 0 2px 1px rgba(220, 225, 255, 0.5); will-change: transform, opacity;
   }
   .shooting-star::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    right: 1px;
-    width: 0;
-    height: 1.5px;
-    transform: translateY(-50%);
-    transform-origin: right center;
-    background: linear-gradient(
-      to left,
-      rgba(255, 255, 255, 0.95) 0%,
-      rgba(255, 220, 190, 0.7) 25%,
-      rgba(180, 170, 255, 0.35) 55%,
-      transparent 100%
-    );
+    content: ""; position: absolute; top: 50%; right: 1px; width: 0; height: 1px;
+    transform: translateY(-50%); transform-origin: right center;
+    background: linear-gradient(to left, rgba(255,255,255,0.85) 0%, rgba(190,200,240,0.4) 45%, transparent 100%);
     border-radius: 1px;
-    pointer-events: none;
   }
-  .shooting-star.is-flying {
-    animation: shoot-move 1.35s cubic-bezier(0.12, 0.55, 0.25, 1) forwards;
-  }
-  .shooting-star.is-flying::after {
-    animation: shoot-trail 1.35s cubic-bezier(0.12, 0.55, 0.25, 1) forwards;
-  }
+  .shooting-star.is-flying { animation: shoot-move 1.25s cubic-bezier(0.15, 0.6, 0.3, 1) forwards; }
+  .shooting-star.is-flying::after { animation: shoot-trail 1.25s cubic-bezier(0.15, 0.6, 0.3, 1) forwards; }
   @keyframes shoot-move {
-    0% {
-      opacity: 0;
-      transform: rotate(var(--angle, 35deg)) translateX(0);
-    }
-    6%  { opacity: 1; }
-    65% { opacity: 1; }
-    100% {
-      opacity: 0;
-      transform: rotate(var(--angle, 35deg)) translateX(var(--dist, 280px));
-    }
+    0% { opacity: 0; transform: rotate(var(--angle, 35deg)) translateX(0); }
+    8% { opacity: 1; } 70% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(var(--angle, 35deg)) translateX(var(--dist, 240px)); }
   }
   @keyframes shoot-trail {
-    0%   { width: 0; opacity: 0; }
-    8%   { width: 55px; opacity: 1; }
-    50%  { width: 110px; opacity: 0.8; }
-    100% { width: 28px; opacity: 0; }
+    0% { width: 0; opacity: 0; } 10% { width: 48px; opacity: 1; }
+    55% { width: 88px; opacity: 0.7; } 100% { width: 22px; opacity: 0; }
   }
 
-
-  /* Individual stars — each twinkles on its own cycle */
+  /* Individual stars — each twinkles on its own cycle（--star-mul で夜明けに減光） */
   .sky-star {
-    position: fixed;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-    background: #fff;
-    will-change: opacity;
-    animation-name: star-twinkle;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+    background: #fff; will-change: opacity;
+    animation-name: star-twinkle; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
   }
   @keyframes star-twinkle {
-    0%, 100% { opacity: calc(var(--dim, 0.15) * var(--star-mul, 1)); }
-    50%      { opacity: calc(var(--bright, 0.7) * var(--star-mul, 1)); }
+    0%, 100% { opacity: calc(var(--dim, 0.12) * var(--star-mul, 1)); }
+    50%      { opacity: calc(var(--bright, 0.65) * var(--star-mul, 1)); }
   }
 
 
@@ -895,6 +852,18 @@
     box-sizing: border-box;
   }
   main p { letter-spacing: 0.03em; }
+
+  /* ===== 管理UI（site2 から移植） ===== */
+  #admin-nav { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+  #admin-nav [hidden] { display: none !important; }
+  #admin-nav button { color: var(--accent); }
+  .inline-editor-toolbar {
+    border: 1px solid var(--accent-soft);
+    border-radius: 20px;
+    background: rgba(106, 140, 175, 0.06);
+    font-family: var(--font-mono);
+    letter-spacing: 0.14em;
+  }
 </style>
 </head>
 <body>
@@ -915,7 +884,12 @@
     <a href="#/read" data-nav="read">物語を読む</a>
     <a href="#toc" data-nav="toc">目次</a>
     <a href="#afterword-btn" data-nav="afterword">あとがき</a>
-    <button type="button" data-nav="manage">管理</button>
+  </nav>
+  <nav id="admin-nav" aria-label="管理">
+    <p class="site-sidebar-label" style="margin:0 0 8px">管理</p>
+    <button type="button" data-nav="login" id="admin-nav-login">管理ログイン</button>
+    <button type="button" data-nav="toggle-edit" id="admin-nav-toggle" hidden>編集モード</button>
+    <button type="button" data-nav="logout" id="admin-nav-logout" hidden>ログアウト</button>
   </nav>
   <div class="site-sidebar-footer">Speak or Die · 2026</div>
 </aside>
@@ -2355,57 +2329,104 @@
 
 <script>
 (function () {
-  function createSkyStars() {
-    var n = 55;
+  /* ===== 星空・流れ星（site2 から移植。夜明けは --dawn / --star-mul で連動） ===== */
+  function createSkyStars(n) {
+    document.querySelectorAll(".sky-star").forEach(function (el) { el.remove(); });
     var frag = document.createDocumentFragment();
     for (var i = 0; i < n; i++) {
       var el = document.createElement("span");
       el.className = "sky-star";
-      var size = Math.random() < 0.18 ? (1.4 + Math.random() * 0.8) : (0.7 + Math.random() * 0.7);
+      var size = Math.random() < 0.16 ? (1.3 + Math.random() * 0.7) : (0.6 + Math.random() * 0.65);
       el.style.width = size + "px";
       el.style.height = size + "px";
       el.style.left = (Math.random() * 100) + "vw";
       el.style.top = (Math.random() * 100) + "vh";
-      if (size > 1.3) {
-        el.style.boxShadow = "0 0 " + (1 + Math.random()) + "px rgba(220,230,255,0.35)";
-      }
-      var duration = 2.5 + Math.random() * 6.5;
+      if (size > 1.2) el.style.boxShadow = "0 0 " + (1 + Math.random()) + "px rgba(210,220,255,0.3)";
+      var duration = 2.8 + Math.random() * 6.5;
       el.style.animationDuration = duration + "s";
       el.style.animationDelay = (-Math.random() * duration) + "s";
-      el.style.setProperty("--dim", String(0.08 + Math.random() * 0.18));
-      el.style.setProperty("--bright", String(0.35 + Math.random() * 0.45));
+      el.style.setProperty("--dim", String(0.07 + Math.random() * 0.16));
+      el.style.setProperty("--bright", String(0.32 + Math.random() * 0.42));
       frag.appendChild(el);
     }
     document.body.appendChild(frag);
   }
 
+  function currentDawn() {
+    return parseFloat(getComputedStyle(document.body).getPropertyValue("--dawn")) || 0;
+  }
+
   function spawnShootingStar() {
+    if (currentDawn() >= 0.92) return; // 夜明け後は流れ星を出さない
     var star = document.createElement("div");
     star.className = "shooting-star";
-    star.style.left = (5 + Math.random() * 75) + "vw";
-    star.style.top = (2 + Math.random() * 38) + "vh";
-    var dir = Math.random() > 0.28 ? 1 : -1;
-    var dist = 260 + Math.random() * 320;
-    var angle = dir > 0 ? (20 + Math.random() * 45) : (120 + Math.random() * 40);
+    star.style.left = (5 + Math.random() * 70) + "vw";
+    star.style.top = (3 + Math.random() * 35) + "vh";
+    var dir = Math.random() > 0.3 ? 1 : -1;
+    var dist = 200 + Math.random() * 260;
+    var angle = dir > 0 ? (18 + Math.random() * 42) : (125 + Math.random() * 38);
     star.style.setProperty("--angle", angle + "deg");
     star.style.setProperty("--dist", dist + "px");
     document.body.appendChild(star);
     void star.offsetWidth;
     star.classList.add("is-flying");
-    setTimeout(function () {
-      if (star.parentNode) star.parentNode.removeChild(star);
-    }, 1500);
+    setTimeout(function () { if (star.parentNode) star.parentNode.removeChild(star); }, 1500);
   }
 
+  var shootTimer = null;
   function scheduleShootingStars() {
-    setTimeout(function () {
-      var dawn = parseFloat(getComputedStyle(document.body).getPropertyValue("--dawn")) || 0;
-      if (dawn < 0.92) {
-        spawnShootingStar();
-      }
+    if (shootTimer) clearTimeout(shootTimer);
+    shootTimer = setTimeout(function () {
+      spawnShootingStar();
+      if (Math.random() < 0.12) setTimeout(spawnShootingStar, 400 + Math.random() * 500);
       scheduleShootingStars();
-    }, 15000);
+    }, 6000 + Math.random() * 10000);
   }
+
+  function startStars() {
+    createSkyStars(48);
+    setTimeout(function () { spawnShootingStar(); scheduleShootingStars(); }, 1800 + Math.random() * 2200);
+  }
+
+  /* 流星群（任意のタイミングで呼び出し可能） */
+  var meteorBurstTimer = null;
+  var meteorBurstEnd = 0;
+  function startMeteorShower(durationMs) {
+    durationMs = durationMs || 30000;
+    meteorBurstEnd = Date.now() + durationMs;
+    if (meteorBurstTimer) clearInterval(meteorBurstTimer);
+    function burstTick() {
+      if (Date.now() >= meteorBurstEnd) {
+        clearInterval(meteorBurstTimer);
+        meteorBurstTimer = null;
+        return;
+      }
+      spawnShootingStar();
+      if (Math.random() < 0.55) setTimeout(spawnShootingStar, 80 + Math.random() * 180);
+      if (Math.random() < 0.3) setTimeout(spawnShootingStar, 200 + Math.random() * 320);
+    }
+    burstTick();
+    meteorBurstTimer = setInterval(burstTick, 280 + Math.random() * 120);
+  }
+  window.SODMeteorShower = startMeteorShower;
+
+  /* タイトルを1秒以内に5回タップすると、30秒間の流星群 */
+  (function () {
+    var titleEl = document.querySelector(".site-title");
+    if (!titleEl) return;
+    titleEl.style.cursor = "pointer";
+    titleEl.style.userSelect = "none";
+    var taps = [];
+    titleEl.addEventListener("click", function () {
+      var now = Date.now();
+      taps.push(now);
+      taps = taps.filter(function (t) { return now - t <= 1000; });
+      if (taps.length >= 5) {
+        taps = [];
+        startMeteorShower(30000);
+      }
+    });
+  })();
 
   var scrolling = false;
 
@@ -2493,11 +2514,7 @@
   });
 
   function start() {
-    createSkyStars();
-    setTimeout(function () {
-      spawnShootingStar();
-      scheduleShootingStars();
-    }, 3000);
+    startStars();
   }
 
   if (document.readyState === "loading") {
@@ -2945,7 +2962,22 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     ev.preventDefault();
     if (nav === "home") { setRoute("home"); return; }
     if (nav === "read") { setRoute("read"); return; }
-    if (nav === "manage") { closeSidebar(); openManage(); return; }
+    if (nav === "manage" || nav === "login") { closeSidebar(); openManage(); return; }
+    if (nav === "toggle-edit") {
+      closeSidebar();
+      if (document.body.classList.contains("is-editing")) exitBodyEdit(true);
+      else if (isManageAuthed()) enterBodyEdit();
+      else openManage();
+      syncAdminNav();
+      return;
+    }
+    if (nav === "logout") {
+      closeSidebar();
+      var lo = document.getElementById("manage-logout");
+      if (lo) lo.click();
+      syncAdminNav();
+      return;
+    }
     if (nav === "toc") {
       setRoute("read");
       setTimeout(function () {
@@ -2995,6 +3027,23 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   }
   window.addEventListener("scroll", updateProgress, { passive: true });
   window.addEventListener("resize", updateProgress);
+
+  /* 管理メニューの表示状態を現在のログイン／編集状態に合わせる */
+  function syncAdminNav() {
+    var authed = isManageAuthed();
+    var editing = document.body.classList.contains("is-editing");
+    var loginNav = document.getElementById("admin-nav-login");
+    var toggleNav = document.getElementById("admin-nav-toggle");
+    var logoutNav = document.getElementById("admin-nav-logout");
+    if (loginNav) loginNav.hidden = authed;
+    if (toggleNav) {
+      toggleNav.hidden = !authed;
+      toggleNav.textContent = editing ? "閲覧モード" : "編集モード";
+    }
+    if (logoutNav) logoutNav.hidden = !authed;
+  }
+  var menuBtnEl = document.getElementById("site-menu-btn");
+  if (menuBtnEl) menuBtnEl.addEventListener("click", syncAdminNav);
 
   function isManageAuthed() {
     if (_firebaseUser) return true;
