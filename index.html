@@ -58,7 +58,7 @@
     z-index: 0;
     pointer-events: none;
     opacity: var(--dawn, 0);
-    transition: opacity 0.4s ease-out;
+    will-change: opacity;
     background:
       radial-gradient(ellipse 95% 60% at 50% 110%, rgba(255, 140, 80, 0.42) 0%, transparent 58%),
       radial-gradient(ellipse 75% 45% at 18% 98%, rgba(255, 170, 100, 0.28) 0%, transparent 52%),
@@ -293,14 +293,6 @@
     }
   }
 
-    15%  { width: 70px; opacity: 1; }
-    70%  { width: 100px; opacity: 0.85; }
-    100% { width: 20px; opacity: 0; }
-  }
-    12%  { width: 55px; opacity: 0.85; }
-    60%  { width: 95px; opacity: 0.65; }
-    100% { width: 28px; opacity: 0; }
-  }
 
 
   /* Shooting stars（site2 の演出を移植） */
@@ -864,6 +856,17 @@
     font-family: var(--font-mono);
     letter-spacing: 0.14em;
   }
+  body.is-dawn .sky-star, body.is-dawn .shooting-star { display: none; }
+  .font-size-ctrl { padding: 0 0 4px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .font-size-ctrl .site-sidebar-label { margin: 0 0 8px; }
+  .fs-row { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+  .fs-row button {
+    font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+    background: none; border: 1px solid var(--line); border-radius: 4px;
+    padding: 4px 12px; cursor: pointer;
+  }
+  .fs-row button:hover { color: var(--fg); border-color: var(--accent); }
+  #fs-val { font-family: var(--font-mono); font-size: 11px; color: var(--fg-dim); min-width: 44px; text-align: center; }
 </style>
 </head>
 <body>
@@ -881,15 +884,23 @@
   <p class="site-sidebar-label">MENU</p>
   <nav>
     <a href="#/" data-nav="home">TOP</a>
-    <a href="#/read" data-nav="read">物語を読む</a>
-    <a href="#toc" data-nav="toc">目次</a>
-    <a href="#afterword-btn" data-nav="afterword">あとがき</a>
+    <a href="#/read" data-nav="read">READ</a>
+    <a href="#toc" data-nav="toc">CONTENTS</a>
+    <a href="#afterword-btn" data-nav="afterword">AFTERWORD</a>
   </nav>
-  <nav id="admin-nav" aria-label="管理">
-    <p class="site-sidebar-label" style="margin:0 0 8px">管理</p>
-    <button type="button" data-nav="login" id="admin-nav-login">管理ログイン</button>
-    <button type="button" data-nav="toggle-edit" id="admin-nav-toggle" hidden>編集モード</button>
-    <button type="button" data-nav="logout" id="admin-nav-logout" hidden>ログアウト</button>
+  <div class="font-size-ctrl" aria-label="TEXT SIZE">
+    <p class="site-sidebar-label" style="margin:0 0 8px">TEXT SIZE</p>
+    <div class="fs-row">
+      <button type="button" id="fs-down" aria-label="smaller">A−</button>
+      <span id="fs-val">14px</span>
+      <button type="button" id="fs-up" aria-label="larger">A+</button>
+    </div>
+  </div>
+  <nav id="admin-nav" aria-label="ADMIN">
+    <p class="site-sidebar-label" style="margin:0 0 8px">ADMIN</p>
+    <button type="button" data-nav="login" id="admin-nav-login">LOGIN</button>
+    <button type="button" data-nav="toggle-edit" id="admin-nav-toggle" hidden>EDIT MODE</button>
+    <button type="button" data-nav="logout" id="admin-nav-logout" hidden>LOGOUT</button>
   </nav>
   <div class="site-sidebar-footer">Speak or Die · 2026</div>
 </aside>
@@ -3003,8 +3014,10 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   function updateProgress() {
     if (!reader || reader.classList.contains("is-hidden")) {
       if (progressBar) progressBar.style.width = "0%";
+      document.body.dataset.dawnQ = "0.00";
       document.body.style.setProperty("--dawn", "0");
       document.body.style.setProperty("--star-mul", "1");
+      document.body.classList.remove("is-dawn");
       return;
     }
     var el = document.documentElement;
@@ -3017,16 +3030,28 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     var dawn = t * t;
     if (dawn < 0.015) dawn = 0;
     if (dawn > 1) dawn = 1;
+    dawn = Math.round(dawn / 0.02) * 0.02;
     var starMul = Math.max(0.05, 1 - dawn * 0.95);
-    document.body.style.setProperty("--dawn", dawn.toFixed(4));
-    document.body.style.setProperty("--star-mul", starMul.toFixed(4));
+    var dawnStr = dawn.toFixed(2), starStr = starMul.toFixed(2);
+    var bodyEl = document.body;
+    if (bodyEl.dataset.dawnQ !== dawnStr) {
+      bodyEl.dataset.dawnQ = dawnStr;
+      bodyEl.style.setProperty("--dawn", dawnStr);
+      bodyEl.style.setProperty("--star-mul", starStr);
+      bodyEl.classList.toggle("is-dawn", dawn >= 0.92);
+    }
     try {
       var p = loadProgress();
-      if (pct > (p.maxPct || 0)) { p.maxPct = pct; saveProgress(p); }
+      if (pct - (p.maxPct || 0) >= 2) { p.maxPct = pct; saveProgress(p); }
     } catch (e) {}
   }
-  window.addEventListener("scroll", updateProgress, { passive: true });
-  window.addEventListener("resize", updateProgress);
+  var progRaf = 0;
+  function requestProgress() {
+    if (progRaf) return;
+    progRaf = requestAnimationFrame(function () { progRaf = 0; updateProgress(); });
+  }
+  window.addEventListener("scroll", requestProgress, { passive: true });
+  window.addEventListener("resize", requestProgress);
 
   /* 管理メニューの表示状態を現在のログイン／編集状態に合わせる */
   function syncAdminNav() {
@@ -3038,7 +3063,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (loginNav) loginNav.hidden = authed;
     if (toggleNav) {
       toggleNav.hidden = !authed;
-      toggleNav.textContent = editing ? "閲覧モード" : "編集モード";
+      toggleNav.textContent = editing ? "VIEW MODE" : "EDIT MODE";
     }
     if (logoutNav) logoutNav.hidden = !authed;
   }
@@ -3644,5 +3669,31 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 })();
 </script>
 
+<script>
+(function () {
+  var KEY = "sod-font-size";
+  var DEFAULT = 14, MIN = 12, MAX = 22, STEP = 1;
+  var size = DEFAULT;
+  try {
+    var saved = parseInt(localStorage.getItem(KEY), 10);
+    if (saved >= MIN && saved <= MAX) size = saved;
+  } catch (e) {}
+  var val = document.getElementById("fs-val");
+  function apply() {
+    document.documentElement.style.setProperty("--body-size", size + "px");
+    if (val) val.textContent = size + "px";
+    try { localStorage.setItem(KEY, String(size)); } catch (e) {}
+  }
+  function change(d) {
+    size = Math.min(MAX, Math.max(MIN, size + d * STEP));
+    apply();
+  }
+  var down = document.getElementById("fs-down");
+  var up = document.getElementById("fs-up");
+  if (down) down.addEventListener("click", function () { change(-1); });
+  if (up) up.addEventListener("click", function () { change(1); });
+  apply();
+})();
+</script>
 </body>
 </html>
