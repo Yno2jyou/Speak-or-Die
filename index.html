@@ -3547,7 +3547,11 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (!c) return;
     if (c.landingTitle) {
       var lt = document.querySelector(".landing-title");
-      if (lt) lt.textContent = c.landingTitle;
+      if (lt) {
+        /* 一文字ずつの演出を作り直すため、分割済みの印を外す */
+        lt.removeAttribute("data-split");
+        lt.textContent = c.landingTitle;
+      }
     }
     if (c.landingSub) {
       var ls = document.querySelector(".landing-sub");
@@ -3597,6 +3601,12 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     }
     if (c.mainHtml && mainEl) {
       mainEl.innerHTML = c.mainHtml;
+      /* 保存HTMLに残った古い表示状態を消し、段落フェードを必ず作り直す */
+      mainEl.querySelectorAll("*").forEach(function (n) {
+        n.classList.remove("rv", "is-in");
+        n.removeAttribute("style");
+        n.removeAttribute("data-rvq");
+      });
     }
   }
 
