@@ -18,7 +18,7 @@
     --font-body: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
     --font-mono: "MS PGothic", "Osaka-mono", monospace;
     --max-width: 700px;
-    --body-size: 14px;
+    --body-size: 13px;
     --leading: 1.85;
   }
 
@@ -263,7 +263,7 @@
     .site-title { font-size: 18px; }
     main { padding: 40px 16px 80px; }
     :root {
-      --body-size: 14px;
+      --body-size: 13px;
       --leading: 1.85;
     }
     .section-title {
@@ -920,7 +920,7 @@
     flex: 0 0 auto;
     max-width: none; margin: 0;
     padding: calc(10px + env(safe-area-inset-top)) 16px 9px;
-    font-size: 10.5px; letter-spacing: .22em;
+    font-size: 14px; letter-spacing: .22em;
     border-bottom: 1px solid rgba(143,180,217,.09);
     background: linear-gradient(180deg, rgba(5,7,12,.92), rgba(5,7,12,0));
   }
@@ -953,7 +953,7 @@
     flex: 1 1 auto; min-height: 0;
     height: 100%;
     max-width: none; margin: 0;
-    padding: clamp(8px, 2vh, 20px) clamp(14px, 3vw, 46px) clamp(44px, 8vh, 72px);
+    padding: clamp(84px, 13vh, 104px) clamp(14px, 3vw, 46px) clamp(60px, 10vh, 88px);
     writing-mode: vertical-rl;
     text-orientation: mixed;
     overflow-x: auto; overflow-y: hidden;
@@ -993,7 +993,7 @@
   body.reading #honbun .afterword-content p {
     margin: 0;
     margin-block-end: clamp(13px, 2vh, 20px);
-    font-size: calc(var(--body-size) * 1.1);
+    font-size: var(--body-size);
     line-height: 1.98;
     letter-spacing: .05em;
     text-indent: 1em;
@@ -1022,15 +1022,15 @@
   @media (max-width: 760px) {
     body.reading #reader-shell > nav {
       padding: calc(8px + env(safe-area-inset-top)) 10px 7px;
-      font-size: 10px;
+      font-size: 14px;
     }
     body.reading #reader-shell > nav a { margin: 0 10px; }
-    body.reading #honbun { padding: 4px 14px calc(46px + env(safe-area-inset-bottom)); }
+    body.reading #honbun { padding: 76px 14px calc(60px + env(safe-area-inset-bottom)); }
     body.reading #honbun > .section,
     body.reading #honbun > .afterword-section { margin-left: 38px; }
     body.reading #honbun .section > p,
     body.reading #honbun .afterword-content p {
-      font-size: calc(var(--body-size) * 1.16);
+      font-size: var(--body-size);
       line-height: 2.04;
       letter-spacing: .035em;
       margin-block-end: 14px;
@@ -1497,24 +1497,42 @@
 
   @media (max-width: 760px) {
     #landing {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-      padding: 78px 22px 92px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      align-content: safe center;
+      align-items: center;
+      column-gap: 60px;
+      padding: 78px 20px 92px;
     }
     .ln-spine { display: none; }
-    .landing-title {
-      order: 1;
-      writing-mode: horizontal-tb; text-orientation: mixed;
-      font-size: clamp(22px, 7vw, 32px);
-      letter-spacing: .16em;
-      padding: 0; margin: 0 0 18px;
+    .ln-side {
+      grid-column: 1; grid-row: 1;
+      justify-self: end; align-self: end;
+      max-width: none;
+      padding: 0;
+      text-align: right;
     }
-    .ln-side { order: 2; max-width: none; padding: 0; text-align: center; }
-    #landing .landing-sub { text-align: center; margin: 0 0 14px; }
-    #landing .landing-rule { margin: 0 auto 22px; }
-    #landing .landing-epigraph { text-align: center; }
-    .landing-enter { position: static; order: 3; margin: 34px auto 0; }
+    .landing-title {
+      grid-column: 2; grid-row: 1 / span 2;
+      justify-self: center;
+      align-self: center;
+      writing-mode: vertical-rl; text-orientation: upright;
+      font-size: clamp(24px, 7.5vw, 34px);
+      letter-spacing: .3em;
+      line-height: 1;
+      padding: 0; margin: 0;
+    }
+    #landing .landing-sub { text-align: right; margin: 0 0 12px; font-size: 12px; }
+    #landing .landing-rule { margin: 0 0 16px auto; width: 0; }
+    #landing .landing-epigraph { text-align: right; font-size: 11.5px; line-height: 1.8; }
+    #landing .landing-epigraph span { white-space: nowrap; }
+    #landing .landing-epigraph .indent { padding-left: 0; }
+    .landing-enter {
+      position: static; grid-column: 1; grid-row: 2;
+      justify-self: end; align-self: start;
+      margin: 60px 0 0;
+    }
     .landing-enter::after { bottom: 3px; }
   }
 
@@ -1666,12 +1684,6 @@
   <p class="site-subtitle">Speak or Die</p>
   <div class="header-rule"></div>
 </header>
-
-<nav>
-  <a href="#/" data-nav="home">TOP</a>
-  <a href="#toc">目次</a>
-</nav>
-
 
 <div id="toc">
   <ol>
@@ -4534,7 +4546,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 <script>
 (function () {
   var KEY = "sod-font-size";
-  var DEFAULT = 14, MIN = 12, MAX = 22, STEP = 1;
+  var DEFAULT = 13, MIN = 12, MAX = 22, STEP = 1;
   var size = DEFAULT;
   try {
     var saved = parseInt(localStorage.getItem(KEY), 10);
@@ -4708,11 +4720,29 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   /* ---------- 6. スクロール同期（視差・チップ・レール） ---------- */
   var ticking = false;
 
+  /* 視界に入っているのに is-in が付いていない段落を、位置から直接判定して表示する。
+     IntersectionObserver は縦組み＋横スクロールの中で通知を取りこぼすことがあるため、その保険。 */
+  function sweepReveal(cont) {
+    if (!cont) return;
+    var cr = cont.getBoundingClientRect();
+    if (cr.width === 0 || cr.height === 0) return;
+    var els = cont.querySelectorAll(".rv:not(.is-in)");
+    for (var k = 0; k < els.length; k++) {
+      var r = els[k].getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      if (r.right > cr.left && r.left < cr.right && r.bottom > cr.top && r.top < cr.bottom) {
+        els[k].classList.add("is-in");
+        if (rvIO) rvIO.unobserve(els[k]);
+      }
+    }
+  }
+
   function updateScroll() {
     ticking = false;
     document.documentElement.style.setProperty("--sy", "0px");
     var reading = document.body.classList.contains("reading");
     var cont = document.getElementById("honbun");
+    sweepReveal(cont);
     if (!reading || !cont || !sections.length) {
       document.body.classList.remove("chip-on");
       return;
