@@ -1406,9 +1406,10 @@
      TOP — 柱と縦組みポスター
      ================================================================= */
   #landing {
-    min-height: 100vh; min-height: 100svh;
+    height: 100vh; height: 100svh;
+    overflow: hidden;
     max-width: none;
-    padding: 0;
+    padding: 0 0 8vh;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
     align-items: center;
@@ -1466,7 +1467,8 @@
     grid-column: 3; justify-self: start;
     writing-mode: vertical-rl;
     text-orientation: upright;
-    font-size: clamp(26px, 3.4vw, 44px);
+    white-space: nowrap;
+    font-size: clamp(24px, min(3.4vw, 5.2vh), 44px);
     letter-spacing: .32em;
     line-height: 1;
     margin: 0;
@@ -1520,6 +1522,7 @@
       justify-self: center;
       align-self: center;
       writing-mode: vertical-rl; text-orientation: upright;
+      white-space: nowrap;
       font-size: clamp(24px, 7.5vw, 34px);
       letter-spacing: .3em;
       line-height: 1;
