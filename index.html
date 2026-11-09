@@ -376,7 +376,9 @@
   }
   .afterword-content .aw-epigraph {
     text-align: center;
-    margin: 0 0 32px;
+    margin: 0;
+    margin-block-start: 4.4em;
+    margin-block-end: 2.2em;
     color: var(--fg);
     line-height: 2.2;
   }
@@ -1271,9 +1273,9 @@
 
   /* 章レール */
   .chapter-rail {
-    position: fixed; right: 22px; top: 50%; transform: translateY(-50%);
+    position: fixed; left: 50%; top: 30px; transform: translateX(-50%);
     z-index: 45;
-    display: flex; flex-direction: column; align-items: flex-end; gap: 9px;
+    display: flex; flex-direction: row; align-items: center; justify-content: flex-end; gap: 9px;
     opacity: 0; pointer-events: none;
     transition: opacity .5s ease;
   }
@@ -1281,7 +1283,7 @@
   .rail-dot {
     position: relative;
     display: flex; align-items: center; justify-content: flex-end;
-    width: 44px; height: 14px; padding: 0; border: 0; background: none;
+    width: 14px; height: 14px; padding: 0; border: 0; background: none;
     cursor: pointer;
   }
   .rail-bar {
@@ -1289,14 +1291,14 @@
     background: rgba(232,232,232,.2);
     transition: width .4s cubic-bezier(.2,.8,.2,1), background .4s ease, box-shadow .4s ease;
   }
-  .rail-dot:hover .rail-bar { width: 26px; background: rgba(210,228,255,.6); }
+  .rail-dot:hover .rail-bar { width: 20px; background: rgba(210,228,255,.6); }
   .rail-dot.is-active .rail-bar {
-    width: 34px; background: var(--signal);
+    width: 22px; background: var(--signal);
     box-shadow: 0 0 12px rgba(143,180,217,.55);
   }
   .rail-label {
-    position: absolute; right: calc(100% + 10px); top: 50%;
-    transform: translateY(-50%) translateX(6px);
+    position: absolute; right: 50%; top: calc(100% + 8px);
+    transform: translateX(50%) translateY(-4px);
     white-space: nowrap;
     font-family: var(--font-body); font-size: 11px; letter-spacing: .08em;
     color: rgba(232,232,232,.92);
@@ -1310,7 +1312,7 @@
     transition: opacity .25s ease, transform .25s ease;
   }
   .rail-dot:hover .rail-label,
-  .rail-dot:focus-visible .rail-label { opacity: 1; transform: translateY(-50%) translateX(0); }
+  .rail-dot:focus-visible .rail-label { opacity: 1; transform: translateX(50%) translateY(0); }
 
   /* 現在章ピル — レールのラベルと同じ意匠で全画面に統一 */
   .chapter-chip {
@@ -3067,6 +3069,7 @@
 <div class="afterword-section">
   <button type="button" class="afterword-toggle" id="afterword-btn" aria-expanded="false">あとがき</button>
   <div class="afterword-content" id="afterword-content" hidden>
+    <div class="aw-epigraph"><span>伝えなかったことにはならない。</span><span class="indent" style="padding-left:6em">ただ伝わらなかっただけで──。</span></div>
     <p>この作品をひとことで表すなら、こんな言葉がふさわしいのではないかと思います。生きるのがつらかった日々、死がとても魅力的に思えたあの日々、僕は何かを書きたいという強い衝動に駆られて、その得体の知れぬ、しかしあまりに巨大なエネルギーを抱えたまま、この作品の原案となる二つのエピソードを書き上げました。『君が死んだら、僕も死ぬよ』と『Speak or Die』、高校二年生の頃に描いた小説です。『君が死んだら、僕も死ぬよ』はこの作品でいう現代パート（奇数話）、『Speak or Die』はこの作品でいう回想パート（偶数話）です。この二つの小説は、共に『生と死』という重いテーマを縦糸に、語られることなく潰えた想いという悲劇を横糸に、生きることにもがき苦しむ人たちを描いています。当時はこの二つの短編をひとつに統合して、中編小説にするつもりはなかったのですが、高校を卒業し、相変わらず将来の見通しが立たず、ぼんやりとしていたときに、高校時代、過去の自分を少しでも救うため、ひいては未来の自分に少しでも希望を持ってもらうために書いたこの二作の小説を統合してみたら、より重厚で、深みのある作品になるのではないかと思い立ちました。そこからの流れは実にスムーズで、豊かで、輝きに満ちていました。この二作品に通底するテーマ、語られざる想いによって、生と死の明暗が分かれるというテーマは、ひとつの作品に束ねることで、より特別で、かけがえのないものになったように感じます。そして改めてこの作品を通読すると、当時原案となる二つの小説を執筆していた自分自身も、トヲルやキズキ、ミツルのように、生きることにもがき苦しんでいたのだと実感できました。あの頃から、どれだけ自分が成長できたのかはわかりませんが、このふたつの作品を書いたことで、何かしら得るものはあったのではないかと思っています。そしてそれが読者の方の心に、少しでも届いたり、響いたりしたら、これ以上に嬉しいことはないです。</p>
   </div>
 </div>
