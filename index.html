@@ -1100,21 +1100,11 @@
     to   { transform: scaleX(1); opacity: 1 }
   }
 
-  /* 章番号 + 下線の描画 */
-  #honbun { counter-reset: chap; }
-  #honbun .section { counter-increment: chap; }
+  /* 章見出し + 下線の描画 */
   #honbun .section-title {
     position: relative;
     border-bottom: none !important;
     padding-bottom: 16px;
-  }
-  #honbun .section-title::before {
-    content: "— " counter(chap, decimal-leading-zero) " —";
-    position: absolute; top: -19px; left: 0; right: 0;
-    font-family: var(--font-mono);
-    font-size: 9px; letter-spacing: .3em;
-    color: rgba(143,180,217,.55);
-    font-weight: normal;
   }
   #honbun .section-title::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
@@ -1169,39 +1159,70 @@
     box-shadow: 0 0 12px rgba(143,180,217,.55);
   }
   .rail-label {
-    position: absolute; right: calc(100% + 12px); top: 50%;
+    position: absolute; right: calc(100% + 10px); top: 50%;
     transform: translateY(-50%) translateX(6px);
     white-space: nowrap;
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em;
-    color: var(--fg);
-    background: rgba(6,8,14,.92);
-    border: 1px solid rgba(143,180,217,.25);
-    padding: 5px 9px;
+    font-family: var(--font-body); font-size: 11px; letter-spacing: .08em;
+    color: rgba(232,232,232,.92);
+    background: rgba(7,9,15,.82);
+    border: 1px solid rgba(143,180,217,.18);
+    border-radius: 999px;
+    padding: 6px 13px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 26px -14px rgba(0,0,0,.9);
     opacity: 0; pointer-events: none;
     transition: opacity .25s ease, transform .25s ease;
   }
   .rail-dot:hover .rail-label,
   .rail-dot:focus-visible .rail-label { opacity: 1; transform: translateY(-50%) translateX(0); }
 
-  /* 現在章チップ */
+  /* 現在章ピル — レールのラベルと同じ意匠で全画面に統一 */
   .chapter-chip {
-    position: fixed; top: 14px; left: 14px; z-index: 45;
-    max-width: min(58vw, 320px);
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em;
-    color: rgba(232,232,232,.74);
-    background: rgba(8,10,16,.66);
-    border: 1px solid rgba(143,180,217,.2);
-    backdrop-filter: blur(10px);
-    padding: 9px 12px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    opacity: 0; transform: translateY(-8px); pointer-events: none;
-    transition: opacity .45s ease, transform .45s ease;
+    position: fixed; top: auto; left: 50%; bottom: 22px; z-index: 45;
+    display: flex; align-items: center; gap: 10px;
+    max-width: min(78vw, 440px);
+    padding: 9px 18px 12px;
+    background: rgba(7,9,15,.74);
+    border: 1px solid rgba(143,180,217,.18);
+    border-radius: 999px;
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    box-shadow: 0 14px 34px -16px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05);
+    opacity: 0; pointer-events: none;
+    transform: translateX(-50%) translateY(14px);
+    transition: opacity .5s ease, transform .55s cubic-bezier(.2,.8,.2,1);
   }
-  body.chip-on .chapter-chip { opacity: 1; transform: none; }
+  body.chip-on .chapter-chip { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .chapter-chip::before {
+    content: ""; flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--signal);
+    box-shadow: 0 0 10px 1px rgba(143,180,217,.75);
+    animation: cc-pulse 2.8s ease-in-out infinite;
+  }
+  @keyframes cc-pulse {
+    0%, 100% { opacity: .45; transform: scale(.78) }
+    50%      { opacity: 1;   transform: scale(1.16) }
+  }
+  .chapter-chip .cc-title {
+    min-width: 0;
+    font-family: var(--font-body);
+    font-size: 11.5px; letter-spacing: .1em; line-height: 1.5;
+    color: rgba(232,232,232,.88);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chapter-chip .cc-bar {
+    position: absolute; left: 20px; right: 20px; bottom: 5px; height: 1px;
+    background: rgba(143,180,217,.16); overflow: hidden;
+  }
+  .chapter-chip .cc-bar i {
+    display: block; height: 100%; width: calc(var(--p, 0) * 100%);
+    background: linear-gradient(90deg, rgba(143,180,217,.25), var(--signal));
+    box-shadow: 0 0 8px rgba(143,180,217,.65);
+    transition: width .35s linear;
+  }
 
   body.is-editing .chapter-chip,
   body.is-editing .chapter-rail { display: none; }
-  body.is-editing #honbun .section-title::before,
   body.is-editing #honbun .section-title::after { content: none; }
   body.is-editing #honbun .section-title { padding-bottom: 12px; }
 
@@ -1224,7 +1245,8 @@
     #landing { padding: 62px 18px 52px; }
     .ln-frame { inset: 10px; }
     .ln-frame i { width: 14px; height: 14px; }
-    .chapter-chip { top: 10px; left: 10px; font-size: 9px; padding: 7px 9px; max-width: 54vw; }
+    .chapter-chip { bottom: 14px; padding: 8px 14px 11px; max-width: 84vw; }
+    .chapter-chip .cc-title { font-size: 10.5px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1240,6 +1262,131 @@
       opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important;
     }
     #honbun .section-title::after { transform: scaleX(1); }
+  }
+
+  /* =================================================================
+     TOP — 柱と縦組みポスター
+     ================================================================= */
+  #landing {
+    min-height: 100vh; min-height: 100svh;
+    max-width: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+    align-items: center;
+    text-align: left;
+    background:
+      radial-gradient(130% 95% at 50% -14%, rgba(40,58,98,.5), transparent 62%),
+      radial-gradient(90% 60% at 50% 112%, rgba(72,46,86,.32), transparent 68%);
+  }
+
+  /* 中央の柱 */
+  .ln-spine {
+    grid-column: 2; align-self: stretch;
+    position: relative; width: 1px; margin: 12vh 0;
+    background: linear-gradient(180deg, transparent, rgba(143,180,217,.34) 14%, rgba(143,180,217,.34) 86%, transparent);
+  }
+  .ln-spine::before,
+  .ln-spine::after {
+    content: ""; position: absolute; left: 50%; width: 5px; height: 5px;
+    margin-left: -3px; border: 1px solid rgba(143,180,217,.6);
+    transform: rotate(45deg); background: var(--bg);
+  }
+  .ln-spine::before { top: -3px; }
+  .ln-spine::after { bottom: -3px; }
+  .ln-pulse {
+    position: absolute; left: 0; top: 0; width: 1px; height: 22vh;
+    background: linear-gradient(180deg, transparent, rgba(207,226,255,.9), transparent);
+    animation: ln-travel 7.5s cubic-bezier(.55,0,.45,1) infinite;
+  }
+  @keyframes ln-travel {
+    0%   { top: -22vh; opacity: 0 }
+    14%  { opacity: .9 }
+    82%  { opacity: .9 }
+    100% { top: 100%; opacity: 0 }
+  }
+
+  /* 左：副題と前書き */
+  .ln-side {
+    grid-column: 1; justify-self: end;
+    max-width: 360px;
+    padding: 0 clamp(22px, 4.4vw, 74px) 0 24px;
+    text-align: right;
+    animation: ln-side-in 1.4s cubic-bezier(.16,.84,.24,1) .5s both;
+  }
+  @keyframes ln-side-in {
+    from { opacity: 0; transform: translateX(16px) }
+    to   { opacity: 1; transform: none }
+  }
+  #landing .landing-sub { text-align: right; margin: 0 0 20px; }
+  #landing .landing-rule { margin: 0 0 26px auto; width: 0; animation: ln-rule 1.4s cubic-bezier(.2,.8,.2,1) .95s forwards; }
+  #landing .landing-epigraph { margin: 0; text-align: right; }
+  #landing .landing-epigraph .indent { padding-left: 0; }
+
+  /* 右：縦組みの題 */
+  .landing-title {
+    grid-column: 3; justify-self: start;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: clamp(26px, 3.4vw, 44px);
+    letter-spacing: .32em;
+    line-height: 1;
+    margin: 0;
+    padding: 0 clamp(24px, 4.6vw, 78px) 0 clamp(18px, 3vw, 42px);
+  }
+  .landing-title .ch { transform: translate3d(0, -20px, 0) scale(.97); }
+
+  /* READ */
+  .landing-enter {
+    position: absolute; left: auto; bottom: 6vh;
+    right: calc(50% + clamp(22px, 4.4vw, 74px));
+    margin: 0; width: max-content;
+    padding: 10px 24px;
+    letter-spacing: .34em; text-indent: .34em;
+    border: 1px solid rgba(143,180,217,.3);
+    border-bottom: 1px solid rgba(143,180,217,.3);
+    border-radius: 999px;
+    color: var(--signal);
+    background: rgba(8,11,18,.42);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    transition: color .25s, border-color .25s, background .25s, box-shadow .25s;
+  }
+  .landing-enter:hover {
+    color: #fff; border-color: rgba(207,226,255,.62);
+    background: rgba(22,32,54,.6);
+    box-shadow: 0 0 26px -6px rgba(143,180,217,.55), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .landing-enter::after { left: 18%; right: 18%; bottom: 5px; }
+
+  @media (max-width: 760px) {
+    #landing {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 78px 22px 92px;
+    }
+    .ln-spine { display: none; }
+    .landing-title {
+      order: 1;
+      writing-mode: horizontal-tb; text-orientation: mixed;
+      font-size: clamp(22px, 7vw, 32px);
+      letter-spacing: .16em;
+      padding: 0; margin: 0 0 18px;
+    }
+    .ln-side { order: 2; max-width: none; padding: 0; text-align: center; }
+    #landing .landing-sub { text-align: center; margin: 0 0 14px; }
+    #landing .landing-rule { margin: 0 auto 22px; }
+    #landing .landing-epigraph { text-align: center; }
+    .landing-enter { position: static; order: 3; margin: 34px auto 0; }
+    .landing-enter::after { bottom: 3px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ln-pulse { animation: none !important; opacity: 0; }
+    .ln-side { animation: none !important; opacity: 1; }
+    .landing-title .ch { transform: none !important; }
+    #landing .landing-rule { width: 148px !important; }
   }
 </style>
 </head>
@@ -1357,20 +1504,26 @@
     <span class="ln-ping p2"></span>
     <span class="ln-core"></span>
   </div>
-  <p class="landing-title">語れ、さもなくば死ね</p>
-  <p class="landing-sub">Speak or Die</p>
-  <div class="landing-rule"></div>
-  <div class="landing-epigraph">
-    <span>伝えなかったことにはならない。</span>
-    <span class="indent">ただ伝わらなかっただけで──</span>
+  <div class="ln-spine" aria-hidden="true"><span class="ln-pulse"></span></div>
+  <div class="ln-side">
+    <p class="landing-sub">Speak or Die</p>
+    <div class="landing-rule"></div>
+    <div class="landing-epigraph">
+      <span>伝えなかったことにはならない。</span>
+      <span class="indent">ただ伝わらなかっただけで──</span>
+    </div>
   </div>
+  <p class="landing-title">語れ、さもなくば死ね</p>
   <a href="#/read" class="landing-enter" id="landing-enter" data-nav="read">READ</a>
 </div>
 
 <div id="reader-shell" class="is-hidden">
 <div class="reader-veil" aria-hidden="true"></div>
 <aside class="chapter-rail" id="chapter-rail" aria-label="章メニュー"></aside>
-<div class="chapter-chip" id="chapter-chip"></div>
+<div class="chapter-chip" id="chapter-chip" aria-hidden="true">
+  <span class="cc-title" id="cc-title"></span>
+  <span class="cc-bar" aria-hidden="true"><i></i></span>
+</div>
 
 <header>
   <p class="site-title">語れ、さもなくば死ね</p>
@@ -4322,7 +4475,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     rail.innerHTML = "";
     sections.forEach(function (sec, i) {
       var t = sec.querySelector(".section-title");
-      var label = t ? (t.textContent || "").replace(/\s+/g, " ").trim() : ("第" + (i + 1) + "章");
+      var label = t ? (t.textContent || "").replace(/\s+/g, " ").trim() : "";
       var b = document.createElement("button");
       b.type = "button";
       b.className = "rail-dot";
@@ -4390,10 +4543,18 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     for (var i = 0; i < sections.length; i++) {
       if (sections[i].getBoundingClientRect().top <= line) idx = i;
     }
+    var sec = sections[idx], pr = 0;
+    if (sec) {
+      var sr = sec.getBoundingClientRect();
+      pr = (line - sr.top) / Math.max(sr.height, 1);
+      pr = Math.min(1, Math.max(0, pr));
+    }
+    if (chip) chip.style.setProperty("--p", pr.toFixed(3));
     if (idx === curIdx) return;
     curIdx = idx;
     var t = sections[idx] && sections[idx].querySelector(".section-title");
-    if (chip) chip.textContent = t ? (t.textContent || "").replace(/\s+/g, " ").trim() : "";
+    var tn = chip && chip.querySelector(".cc-title");
+    if (tn) tn.textContent = t ? (t.textContent || "").replace(/\s+/g, " ").trim() : "";
     if (rail) {
       Array.prototype.forEach.call(rail.children, function (el, i) {
         el.classList.toggle("is-active", i === idx);
