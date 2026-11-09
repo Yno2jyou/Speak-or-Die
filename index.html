@@ -1590,20 +1590,76 @@
     #landing { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; padding-top: 72px; padding-bottom: 96px; }
     .landing-title { font-size: min(var(--lt), 4.4dvh); padding: 0; }
   }
-  #honbun .rv, #honbun .rv.is-in { opacity: 1 !important; transition: none !important; }
-  body.reading #grain,
-  body.reading #synapse-canvas,
-  body.reading #vignette,
-  body.reading #bloom,
-  body.reading .sky-star,
-  body.reading .shooting-star { display: none !important; }
-  body.reading::before, body.reading::after { display: none; }
-  body.reading #nebula { filter: none; animation: none; will-change: auto; transform: none; opacity: .8; }
-  body.reading .reader-veil::before { animation: none; }
-  body.reading .chapter-chip,
-  body.reading #toc,
-  body.reading .site-menu-btn { -webkit-backdrop-filter: none; backdrop-filter: none; }
-  body.reading #honbun { will-change: scroll-position; }
+  /* モバイル（幅760px以下）の閲覧画面は横書き・縦スクロール */
+  @media (max-width: 760px) {
+    body.reading #honbun {
+      writing-mode: horizontal-tb; text-orientation: mixed;
+      overflow-x: hidden; overflow-y: auto;
+      overscroll-behavior-y: contain; overscroll-behavior-x: none;
+      touch-action: pan-y;
+      padding: 70px 18px calc(72px + env(safe-area-inset-bottom));
+    }
+    body.reading #honbun > .section,
+    body.reading #honbun > .afterword-section { margin: 0 0 56px 0; }
+    body.reading #honbun .section-title {
+      padding: 0 0 12px; margin: 0 0 22px; text-align: center; font-size: 14px; letter-spacing: .2em;
+    }
+    body.reading #honbun .section-title::after {
+      left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(143,180,217,.55) 18%, rgba(143,180,217,.55) 82%, transparent);
+      transform: scaleX(0); transform-origin: 50% 50%;
+    }
+    body.reading #honbun .section-title.is-in::after,
+    body.reading:not(.rv-on) #honbun .section-title::after { transform: scaleX(1); }
+    body.reading #honbun .section > p,
+    body.reading #honbun .afterword-content p {
+      margin: 0 0 1.1em; line-height: 2; letter-spacing: .03em; text-indent: 1em;
+    }
+    body.reading #honbun .section > p.no-indent,
+    body.reading #honbun .afterword-content p.no-indent { text-indent: 0; }
+    body.reading #honbun .afterword-toggle { padding: 12px 20px; }
+    body.reading #honbun .afterword-content { margin-top: 28px; }
+    body.reading #honbun .afterword-content .aw-epigraph { margin-block-start: 1em; text-align: center; }
+  }
+</style>
+<style>
+  /* ===== 閲覧画面のページトップにタイトルとサブタイトルを表示（縦書き・横書き共通） ===== */
+  body.reading #reader-shell > header {
+    display: block; flex: 0 0 auto; max-width: none; margin: 0;
+    padding: calc(12px + env(safe-area-inset-top)) 60px 8px;
+    text-align: center; position: relative; z-index: 2;
+  }
+  body.reading #reader-shell > header .site-title {
+    font-size: 25px; letter-spacing: .22em; margin: 0 0 3px; line-height: 1.4;
+  }
+  body.reading #reader-shell > header .site-subtitle {
+    font-size: 13px; letter-spacing: .24em; line-height: 1.4;
+  }
+  body.reading #reader-shell > header .header-rule { display: none; }
+  body.reading #honbun { padding-top: clamp(52px, 9vh, 72px); }
+  body.reading .chapter-rail { top: 84px; }
+  body.reading #toc { top: 80px; }
+  @media (max-width: 760px) {
+    body.reading #reader-shell > header { padding: calc(10px + env(safe-area-inset-top)) 52px 6px; }
+    body.reading #reader-shell > header .site-title { font-size: 21px; letter-spacing: .14em; }
+    body.reading #reader-shell > header .site-subtitle { font-size: 11px; letter-spacing: .2em; }
+    body.reading #honbun { padding-top: 20px; }
+    body.reading #toc { top: 72px; }
+  }
+
+  /* ===== モバイルのみ演出を絞る ===== */
+  @media (max-width: 760px), (pointer: coarse) {
+    #grain, #synapse-canvas, #vignette, #bloom { display: none !important; }
+    body.reading:not(.is-dawn) .sky-star, body.reading:not(.is-dawn) .shooting-star { display: block !important; }
+    #nebula { filter: none; animation: none; will-change: auto; transform: none; opacity: .8; }
+    .reader-veil::before { animation: none; }
+    .ln-ring, .ln-core, .ln-pulse, .landing-enter::after, .chapter-chip::before { animation: none !important; }
+    .ln-ping { display: none; }
+    .chapter-chip, #toc, .site-menu-btn, .landing-enter {
+      -webkit-backdrop-filter: none; backdrop-filter: none;
+    }
+    #honbun .rv, #honbun .rv.is-in { opacity: 1 !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -3150,6 +3206,8 @@
 
 <script>
 (function () {
+  /* 縦書き（横スクロール）かどうか。モバイル幅は横書き（縦スクロール） */
+  window.sodVert = function () { return !(window.matchMedia && window.matchMedia("(max-width: 760px)").matches); };
   /* ===== 星空・流れ星（site2 から移植。夜明けは --dawn / --star-mul で連動） ===== */
   function createSkyStars(n) {
     document.querySelectorAll(".sky-star").forEach(function (el) { el.remove(); });
@@ -3260,7 +3318,12 @@
       var cr = cont.getBoundingClientRect();
       var sr = target.getBoundingClientRect();
       var padR = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
-      cont.scrollTo({ left: cont.scrollLeft + (sr.right - (cr.right - padR)), behavior: "smooth" });
+      if (window.sodVert()) {
+        cont.scrollTo({ left: cont.scrollLeft + (sr.right - (cr.right - padR)), behavior: "smooth" });
+      } else {
+        var padT0 = parseFloat(window.getComputedStyle(cont).paddingTop) || 0;
+        cont.scrollTo({ top: cont.scrollTop + (sr.top - (cr.top + padT0)), behavior: "smooth" });
+      }
       setTimeout(function () { scrolling = false; }, 800);
       return;
     }
@@ -3658,9 +3721,9 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     }
     if (c.mainHtml && mainEl && !document.body.classList.contains("is-editing") && c.mainHtml !== window.__sodLastMainHtml) {
       window.__sodLastMainHtml = c.mainHtml;
-      var _sl = mainEl.scrollLeft;
+      var _sl = mainEl.scrollLeft, _st = mainEl.scrollTop;
       mainEl.innerHTML = c.mainHtml;
-      mainEl.scrollLeft = _sl;
+      mainEl.scrollLeft = _sl; mainEl.scrollTop = _st;
       /* 保存HTMLに残った古い表示状態を消し、段落フェードを必ず作り直す */
       mainEl.querySelectorAll("*").forEach(function (n) {
         n.classList.remove("rv", "is-in");
@@ -3869,9 +3932,10 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     var hb = document.getElementById("honbun");
     var pct = 0;
     if (hb) {
-      var hmax = hb.scrollWidth - hb.clientWidth;
+      var vertP = window.sodVert();
+      var hmax = vertP ? hb.scrollWidth - hb.clientWidth : hb.scrollHeight - hb.clientHeight;
       if (hmax > 0) {
-        var sl = hb.scrollLeft;
+        var sl = vertP ? hb.scrollLeft : hb.scrollTop;
         if (sl < 0) sl = -sl;
         pct = Math.min(100, Math.max(0, (sl / hmax) * 100));
       }
@@ -4729,7 +4793,12 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     var cr = cont.getBoundingClientRect();
     var sr = sec.getBoundingClientRect();
     var padR = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
-    cont.scrollTo({ left: cont.scrollLeft + (sr.right - (cr.right - padR)), behavior: reduce ? "auto" : "smooth" });
+    if (window.sodVert()) {
+      cont.scrollTo({ left: cont.scrollLeft + (sr.right - (cr.right - padR)), behavior: reduce ? "auto" : "smooth" });
+    } else {
+      var padT1 = parseFloat(window.getComputedStyle(cont).paddingTop) || 0;
+      cont.scrollTo({ top: cont.scrollTop + (sr.top - (cr.top + padT1)), behavior: reduce ? "auto" : "smooth" });
+    }
   }
 
   function buildRail() {
@@ -4796,8 +4865,11 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (document.body.classList.contains("is-editing")) return;
     collect();
     buildRail();
-    document.body.classList.remove("rv-on");
-    return;
+    /* モバイルは段落フェードを行わない（軽量化） */
+    if (window.matchMedia && window.matchMedia("(max-width: 760px), (pointer: coarse)").matches) {
+      document.body.classList.remove("rv-on");
+      return;
+    }
     var items = Array.prototype.slice.call(main.querySelectorAll(".section > p, .section > .section-title"));
     if (!("IntersectionObserver" in window)) {
       items.forEach(function (el) { el.classList.add("rv", "is-in"); });
@@ -4857,22 +4929,28 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     ticking = false;
     var reading = document.body.classList.contains("reading");
     var cont = document.getElementById("honbun");
+    if (sweepT) clearTimeout(sweepT);
+    sweepT = setTimeout(function () { sweepT = 0; sweepReveal(cont); }, 350);
     if (!reading || !cont || !sections.length) {
       document.body.classList.remove("chip-on");
       return;
     }
     /* 紙面の右端が読み位置。右端にいる章を現在章とする */
     var cRect = cont.getBoundingClientRect();
-    if (padRCache === null) padRCache = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
+    var vertU = window.sodVert();
+    if (padRCache === null || window.__padMode !== vertU) {
+      window.__padMode = vertU;
+      padRCache = parseFloat(window.getComputedStyle(cont)[vertU ? "paddingRight" : "paddingTop"]) || 0;
+    }
     var padR = padRCache;
-    var head = cRect.right - padR;
+    var head = vertU ? cRect.right - padR : cRect.top + padR;
     var idx = 0, sr = null;
     for (var i = 0; i < sections.length; i++) {
       var r = sections[i].getBoundingClientRect();
-      if (r.right >= head - 1) { idx = i; sr = r; } else break;
+      if (vertU ? (r.right >= head - 1) : (r.top <= head + 1)) { idx = i; sr = r; } else break;
     }
     var pr = 0;
-    if (sr) pr = (sr.right - head) / Math.max(sr.width, 1);
+    if (sr) pr = vertU ? (sr.right - head) / Math.max(sr.width, 1) : (head - sr.top) / Math.max(sr.height, 1);
     pr = Math.min(1, Math.max(0, pr));
     document.body.classList.toggle("chip-on", idx > 0 || pr > 0.015);
     if (chip) chip.style.setProperty("--p", pr.toFixed(3));
@@ -4905,9 +4983,9 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   var posT = 0;
   function restorePos(hb) {
     var v = NaN;
-    try { v = parseFloat(sessionStorage.getItem("sod-pos")); } catch (e) {}
+    try { v = parseFloat(sessionStorage.getItem(window.sodVert() ? "sod-pos" : "sod-pos-h")); } catch (e) {}
     if (!isFinite(v) || v === 0) return;
-    var go = function () { hb.scrollLeft = v; requestScroll(); };
+    var go = function () { if (window.sodVert()) hb.scrollLeft = v; else hb.scrollTop = v; requestScroll(); };
     go();
     setTimeout(go, 300);
     window.addEventListener("load", function () { setTimeout(go, 100); }, { once: true });
@@ -4916,7 +4994,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     posT = 0;
     var hb = document.getElementById("honbun");
     if (!hb || !document.body.classList.contains("reading")) return;
-    try { sessionStorage.setItem("sod-pos", String(hb.scrollLeft)); } catch (e) {}
+    try { sessionStorage.setItem(window.sodVert() ? "sod-pos" : "sod-pos-h", String(window.sodVert() ? hb.scrollLeft : hb.scrollTop)); } catch (e) {}
   }
   if (document.getElementById("honbun")) {
     document.getElementById("honbun").addEventListener("scroll", function () {
@@ -4932,7 +5010,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (on && !wasOn) {
       var hb = document.getElementById("honbun");
       if (hb) {
-        hb.scrollLeft = 0;
+        hb.scrollLeft = 0; hb.scrollTop = 0;
         if (!bootDone) restorePos(hb);
       }
     }
