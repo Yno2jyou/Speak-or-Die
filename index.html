@@ -902,6 +902,142 @@
   }
   .fs-row button:hover { color: var(--fg); border-color: var(--accent); }
   #fs-val { font-family: var(--font-mono); font-size: 11px; color: var(--fg-dim); min-width: 44px; text-align: center; }
+
+  /* =================================================================
+     READER — 縦読み（縦組み・横スクロール）
+     ================================================================= */
+  body.reading { overflow: hidden; height: 100vh; height: 100dvh; }
+
+  body.reading #reader-shell {
+    position: relative;
+    height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  body.reading #reader-shell > header { display: none; }
+  body.reading #reader-shell > nav {
+    flex: 0 0 auto;
+    max-width: none; margin: 0;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 9px;
+    font-size: 10.5px; letter-spacing: .22em;
+    border-bottom: 1px solid rgba(143,180,217,.09);
+    background: linear-gradient(180deg, rgba(5,7,12,.92), rgba(5,7,12,0));
+  }
+  body.reading #reader-shell > nav a { margin: 0 13px; opacity: .85; }
+  body.reading #reader-shell > footer { display: none; }
+
+  /* 目次はオーバーレイ */
+  body.reading #toc {
+    display: block;
+    position: absolute; z-index: 60; top: 46px; left: 50%;
+    width: min(430px, 88vw); max-width: none;
+    max-height: min(64dvh, 560px); overflow-y: auto;
+    margin: 0; padding: 4px 20px;
+    background: rgba(6,9,15,.96);
+    border: 1px solid rgba(143,180,217,.2);
+    border-radius: 14px;
+    box-shadow: 0 30px 70px -30px #000;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    opacity: 0; pointer-events: none;
+    transform: translate(-50%, -8px);
+    transition: opacity .32s ease, transform .38s cubic-bezier(.2,.8,.2,1);
+  }
+  body.reading #toc.is-open { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  body.reading #toc ol { border-top: none; padding: 8px 0 10px; font-size: 12.5px; }
+  body.reading #toc a { border-bottom: none; }
+
+  /* 紙面：右から左へ横スクロール（縦組みの組版そのもの） */
+  body.reading #honbun {
+    position: relative; z-index: 1;
+    flex: 1 1 auto; min-height: 0;
+    height: 100%;
+    max-width: none; margin: 0;
+    padding: clamp(8px, 2vh, 20px) clamp(14px, 3vw, 46px) clamp(44px, 8vh, 72px);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    overflow-x: auto; overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  body.reading #honbun::-webkit-scrollbar { width: 0; height: 0; }
+
+  body.reading #honbun > .section,
+  body.reading #honbun > .afterword-section {
+    margin: 0 0 0 clamp(34px, 6vw, 92px);
+    padding: 0;
+    max-width: none;
+    text-align: start;
+  }
+
+  body.reading #honbun .section-title {
+    font-size: 13.5px; letter-spacing: .3em;
+    color: rgba(232,232,232,.6);
+    margin: 0; margin-block-end: clamp(18px, 3vh, 30px);
+    padding: 0 0 0 13px;
+    border: 0;
+    text-align: start;
+  }
+  body.reading #honbun .section-title::after {
+    left: 0; right: auto; top: 0; bottom: 0;
+    width: 1px; height: auto;
+    background: linear-gradient(180deg, transparent, rgba(143,180,217,.5) 14%, rgba(143,180,217,.5) 86%, transparent);
+    transform: scaleY(0); transform-origin: 50% 0;
+  }
+  body.reading #honbun .section-title.is-in::after,
+  body.reading:not(.rv-on) #honbun .section-title::after { transform: scaleY(1); }
+
+  body.reading #honbun .section > p,
+  body.reading #honbun .afterword-content p {
+    margin: 0;
+    margin-block-end: clamp(13px, 2vh, 20px);
+    font-size: calc(var(--body-size) * 1.1);
+    line-height: 1.98;
+    letter-spacing: .05em;
+    text-indent: 1em;
+  }
+  body.reading #honbun .section > p.no-indent,
+  body.reading #honbun .afterword-content p.no-indent { text-indent: 0; }
+
+  /* あとがきも本文の続きとして縦組みに載せる */
+  body.reading #honbun .afterword-toggle {
+    font-size: 11px; letter-spacing: .3em;
+    padding: 0 0 0 12px; border: 0;
+    color: rgba(232,232,232,.55);
+  }
+  body.reading #honbun .afterword-content {
+    margin: 0;
+    font-size: calc(var(--body-size) * 1.08);
+    line-height: 1.98;
+    letter-spacing: .05em;
+    color: var(--fg);
+  }
+  body.reading #honbun .afterword-content .aw-title,
+  body.reading #honbun .afterword-content .aw-epigraph { text-align: start; }
+
+  body.reading .chapter-chip { bottom: calc(14px + env(safe-area-inset-bottom)); }
+
+  @media (max-width: 760px) {
+    body.reading #reader-shell > nav {
+      padding: calc(8px + env(safe-area-inset-top)) 10px 7px;
+      font-size: 10px;
+    }
+    body.reading #reader-shell > nav a { margin: 0 10px; }
+    body.reading #honbun { padding: 4px 14px calc(46px + env(safe-area-inset-bottom)); }
+    body.reading #honbun > .section,
+    body.reading #honbun > .afterword-section { margin-left: 38px; }
+    body.reading #honbun .section > p,
+    body.reading #honbun .afterword-content p {
+      font-size: calc(var(--body-size) * 1.16);
+      line-height: 2.04;
+      letter-spacing: .035em;
+      margin-block-end: 14px;
+    }
+    body.reading #honbun .section-title { font-size: 12.5px; margin-block-end: 18px; }
+    body.reading #toc { top: 42px; width: 90vw; max-height: 68dvh; }
+  }
 </style>
 
 <style>
@@ -2915,7 +3051,6 @@
     <p>その言葉に頷き、天を見上げると、ふと夜空の片隅で、ひとつの星が震えるように瞬いた。それは瞬きというよりかは、まるで何かをぐっと堪えるかのようなか細い煌めきだった。僕はその微弱な光を見つめながら、遠く彼方に浮かぶ名もなき星のことを思った。もしかしたらその星は何百年、何千年も前に燃え尽きて、もうこの世には存在していないのかもしれない。あるいはその光はすでに失われたものによって放たれた、残響のようなものなのかもしれない。しかしそれでも、いやだからこそなのか、その光は今なお色褪せることなく、ある種の切実さを持って、僕たちに訴えかけている。ここにいるよ、と。ここで待っているよ、と。まるで太陽が惚れて、月が嫉妬するような眩い光で。</p>
   </div>
 
-</main>
 
 <div class="afterword-section">
   <button type="button" class="afterword-toggle" id="afterword-btn" aria-expanded="false">あとがき</button>
@@ -2923,6 +3058,9 @@
     <p>この作品をひとことで表すなら、こんな言葉がふさわしいのではないかと思います。生きるのがつらかった日々、死がとても魅力的に思えたあの日々、僕は何かを書きたいという強い衝動に駆られて、その得体の知れぬ、しかしあまりに巨大なエネルギーを抱えたまま、この作品の原案となる二つのエピソードを書き上げました。『君が死んだら、僕も死ぬよ』と『Speak or Die』、高校二年生の頃に描いた小説です。『君が死んだら、僕も死ぬよ』はこの作品でいう現代パート（奇数話）、『Speak or Die』はこの作品でいう回想パート（偶数話）です。この二つの小説は、共に『生と死』という重いテーマを縦糸に、語られることなく潰えた想いという悲劇を横糸に、生きることにもがき苦しむ人たちを描いています。当時はこの二つの短編をひとつに統合して、中編小説にするつもりはなかったのですが、高校を卒業し、相変わらず将来の見通しが立たず、ぼんやりとしていたときに、高校時代、過去の自分を少しでも救うため、ひいては未来の自分に少しでも希望を持ってもらうために書いたこの二作の小説を統合してみたら、より重厚で、深みのある作品になるのではないかと思い立ちました。そこからの流れは実にスムーズで、豊かで、輝きに満ちていました。この二作品に通底するテーマ、語られざる想いによって、生と死の明暗が分かれるというテーマは、ひとつの作品に束ねることで、より特別で、かけがえのないものになったように感じます。そして改めてこの作品を通読すると、当時原案となる二つの小説を執筆していた自分自身も、トヲルやキズキ、ミツルのように、生きることにもがき苦しんでいたのだと実感できました。あの頃から、どれだけ自分が成長できたのかはわかりませんが、このふたつの作品を書いたことで、何かしら得るものはあったのではないかと思っています。そしてそれが読者の方の心に、少しでも届いたり、響いたりしたら、これ以上に嬉しいことはないです。</p>
   </div>
 </div>
+</main>
+
+
 
 <footer>
   <p>&copy; 2026 Speak or Die</p>
@@ -3040,6 +3178,19 @@
 
   function scrollToEl(target) {
     if (scrolling) return;
+    /* 縦読み画面：本文は横スクロールなので、紙面の右端（読み位置）へ寄せる */
+    var cont = document.getElementById("honbun");
+    if (cont && target && target !== cont && cont.contains(target) && document.body.classList.contains("reading")) {
+      scrolling = true;
+      var cr = cont.getBoundingClientRect();
+      var sr = target.getBoundingClientRect();
+      var padR = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
+      cont.scrollTo({ left: cont.scrollLeft + (sr.right - (cr.right - padR)), behavior: "smooth" });
+      setTimeout(function () { scrolling = false; }, 800);
+      return;
+    }
+    /* 縦読み画面ではオーバーレイ（目次など）は固定表示なのでスクロール不要 */
+    if (document.body.classList.contains("reading")) return;
     scrolling = true;
     var top = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - 12;
     var isTouch = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
@@ -3055,6 +3206,7 @@
       scrolling = false;
     }
   }
+  window.sodScrollToEl = scrollToEl;
 
   document.addEventListener("click", function (ev) {
     var link = ev.target;
@@ -3607,7 +3759,11 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
         var btn = document.getElementById("afterword-btn");
         var content = document.getElementById("afterword-content");
         if (btn && content && !content.classList.contains("is-open")) btn.click();
-        if (btn) btn.scrollIntoView({ behavior: "smooth", block: "center" });
+        var tgt = (content && content.classList.contains("is-open")) ? content : btn;
+        if (tgt) {
+          if (window.sodScrollToEl) window.sodScrollToEl(tgt);
+          else tgt.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
       }, 80);
     }
   });
@@ -3621,10 +3777,17 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       document.body.classList.remove("is-dawn");
       return;
     }
-    var el = document.documentElement;
-    var scrollTop = window.pageYOffset || el.scrollTop || 0;
-    var height = el.scrollHeight - el.clientHeight;
-    var pct = height > 0 ? Math.min(100, Math.max(0, (scrollTop / height) * 100)) : 0;
+    /* 縦読み：紙面の横スクロール量を読了率にする */
+    var hb = document.getElementById("honbun");
+    var pct = 0;
+    if (hb) {
+      var hmax = hb.scrollWidth - hb.clientWidth;
+      if (hmax > 0) {
+        var sl = hb.scrollLeft;
+        if (sl < 0) sl = -sl;
+        pct = Math.min(100, Math.max(0, (sl / hmax) * 100));
+      }
+    }
     if (progressBar) progressBar.style.width = pct.toFixed(1) + "%";
     /* 夜明け: 序盤は暗く、終盤で明るく（二乗カーブ） */
     var t = pct / 100;
@@ -3653,6 +3816,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   }
   window.addEventListener("scroll", requestProgress, { passive: true });
   window.addEventListener("resize", requestProgress);
+  window.__syncReadingProgress = requestProgress;
 
   /* 管理メニューの表示状態を現在のログイン／編集状態に合わせる */
   function syncAdminNav() {
@@ -4348,7 +4512,10 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
         setTimeout(function () {
           var id = h.substring(1);
           var t = document.getElementById(id);
-          if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (t) {
+            if (window.sodScrollToEl) window.sodScrollToEl(t);
+            else t.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
         }, 100);
       }
     } else {
@@ -4464,6 +4631,16 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     sections = Array.prototype.slice.call(document.querySelectorAll("#honbun .section"));
   }
 
+  /* 章の頭（紙面の右端）へ移動 */
+  function jumpTo(sec) {
+    var cont = document.getElementById("honbun");
+    if (!cont || !sec) return;
+    var cr = cont.getBoundingClientRect();
+    var sr = sec.getBoundingClientRect();
+    var padR = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
+    cont.scrollTo({ left: cont.scrollLeft + (sr.right - (cr.right - padR)), behavior: reduce ? "auto" : "smooth" });
+  }
+
   function buildRail() {
     if (!rail || !sections.length) return;
     var sig = sections.map(function (sec) {
@@ -4488,7 +4665,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       b.appendChild(bar);
       b.appendChild(lab);
       b.addEventListener("click", function () {
-        sec.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+        jumpTo(sec);
       });
       rail.appendChild(b);
     });
@@ -4533,23 +4710,28 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 
   function updateScroll() {
     ticking = false;
-    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    document.documentElement.style.setProperty("--sy", y.toFixed(0) + "px");
+    document.documentElement.style.setProperty("--sy", "0px");
     var reading = document.body.classList.contains("reading");
-    document.body.classList.toggle("chip-on", reading && y > 240);
-    if (!reading || !sections.length) return;
-    var line = window.innerHeight * 0.36;
-    var idx = 0;
+    var cont = document.getElementById("honbun");
+    if (!reading || !cont || !sections.length) {
+      document.body.classList.remove("chip-on");
+      return;
+    }
+    /* 紙面の右端が読み位置。右端にいる章を現在章とする */
+    var cRect = cont.getBoundingClientRect();
+    var padR = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
+    var head = cRect.right - padR;
+    var idx = 0, sr = null;
     for (var i = 0; i < sections.length; i++) {
-      if (sections[i].getBoundingClientRect().top <= line) idx = i;
+      var r = sections[i].getBoundingClientRect();
+      if (r.right >= head - 1) { idx = i; sr = r; } else break;
     }
-    var sec = sections[idx], pr = 0;
-    if (sec) {
-      var sr = sec.getBoundingClientRect();
-      pr = (line - sr.top) / Math.max(sr.height, 1);
-      pr = Math.min(1, Math.max(0, pr));
-    }
+    var pr = 0;
+    if (sr) pr = (sr.right - head) / Math.max(sr.width, 1);
+    pr = Math.min(1, Math.max(0, pr));
+    document.body.classList.toggle("chip-on", idx > 0 || pr > 0.015);
     if (chip) chip.style.setProperty("--p", pr.toFixed(3));
+    if (typeof window.__syncReadingProgress === "function") window.__syncReadingProgress();
     if (idx === curIdx) return;
     curIdx = idx;
     var t = sections[idx] && sections[idx].querySelector(".section-title");
@@ -4569,12 +4751,19 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   }
 
   window.addEventListener("scroll", requestScroll, { passive: true });
+  var honbunEl = document.getElementById("honbun");
+  if (honbunEl) honbunEl.addEventListener("scroll", requestScroll, { passive: true });
 
   /* ---------- 7. 閲覧画面かどうかの同期 ---------- */
   function syncReading() {
     var reader = document.getElementById("reader-shell");
     var on = !!reader && !reader.classList.contains("is-hidden");
+    var wasOn = document.body.classList.contains("reading");
     document.body.classList.toggle("reading", on);
+    if (on && !wasOn) {
+      var hb = document.getElementById("honbun");
+      if (hb) hb.scrollLeft = 0;
+    }
     document.body.classList.toggle(
       "rail-on",
       on && window.innerWidth >= 1080 && !document.body.classList.contains("is-editing")
