@@ -1501,6 +1501,8 @@
 
   @media (max-width: 760px) {
     #landing {
+      height: auto; min-height: 100vh; min-height: 100svh;
+      overflow: visible;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       grid-template-rows: auto auto;
@@ -4703,6 +4705,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   var rvIO = null;
   /* 段落は一つずつ順番に出現させる（まとめて一斉に出ないように） */
   var rvPending = [];
+  var rvWaiting = [];
   var rvPumping = false;
   function rvPump() {
     var el = rvPending.shift();
@@ -4743,6 +4746,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       el.classList.add("rv");
       if (fresh < 6) el.style.setProperty("--d", (fresh * 60) + "ms");
       fresh++;
+      rvWaiting.push(el);
       rvIO.observe(el);
     });
     document.body.classList.add("rv-on");
@@ -4754,17 +4758,21 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   /* 視界に入っているのに is-in が付いていない段落を、位置から直接判定して表示する。
      IntersectionObserver は縦組み＋横スクロールの中で通知を取りこぼすことがあるため、その保険。 */
   function sweepReveal(cont) {
-    if (!cont) return;
+    if (!cont || !rvWaiting.length) return;
     var cr = cont.getBoundingClientRect();
     if (cr.width === 0 || cr.height === 0) return;
-    var els = cont.querySelectorAll(".rv:not(.is-in)");
-    for (var k = 0; k < els.length; k++) {
-      var r = els[k].getBoundingClientRect();
-      if (r.width === 0 && r.height === 0) continue;
+    var keep = [];
+    for (var k = 0; k < rvWaiting.length; k++) {
+      var el = rvWaiting[k];
+      if (!el.isConnected || el.classList.contains("is-in")) continue;
+      var r = el.getBoundingClientRect();
       if (r.right > cr.left && r.left < cr.right && r.bottom > cr.top && r.top < cr.bottom) {
-        rvQueue(els[k]);
+        rvQueue(el);
+      } else {
+        keep.push(el);
       }
     }
+    rvWaiting = keep;
   }
 
   function updateScroll() {
