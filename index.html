@@ -1591,36 +1591,6 @@
     .landing-title { font-size: min(var(--lt), 4.4dvh); padding: 0; }
   }
   /* モバイル（幅760px以下）の閲覧画面は横書き・縦スクロール */
-  @media (max-width: 760px) {
-    body.reading #honbun {
-      writing-mode: horizontal-tb; text-orientation: mixed;
-      overflow-x: hidden; overflow-y: auto;
-      overscroll-behavior-y: contain; overscroll-behavior-x: none;
-      touch-action: pan-y;
-      padding: 70px 18px calc(72px + env(safe-area-inset-bottom));
-    }
-    body.reading #honbun > .section,
-    body.reading #honbun > .afterword-section { margin: 0 0 56px 0; }
-    body.reading #honbun .section-title {
-      padding: 0 0 12px; margin: 0 0 22px; text-align: center; font-size: 14px; letter-spacing: .2em;
-    }
-    body.reading #honbun .section-title::after {
-      left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(143,180,217,.55) 18%, rgba(143,180,217,.55) 82%, transparent);
-      transform: scaleX(0); transform-origin: 50% 50%;
-    }
-    body.reading #honbun .section-title.is-in::after,
-    body.reading:not(.rv-on) #honbun .section-title::after { transform: scaleX(1); }
-    body.reading #honbun .section > p,
-    body.reading #honbun .afterword-content p {
-      margin: 0 0 1.1em; line-height: 2; letter-spacing: .03em; text-indent: 1em;
-    }
-    body.reading #honbun .section > p.no-indent,
-    body.reading #honbun .afterword-content p.no-indent { text-indent: 0; }
-    body.reading #honbun .afterword-toggle { padding: 12px 20px; }
-    body.reading #honbun .afterword-content { margin-top: 28px; }
-    body.reading #honbun .afterword-content .aw-epigraph { margin-block-start: 1em; text-align: center; }
-  }
 </style>
 <style>
   /* ===== 閲覧画面のページトップにタイトルとサブタイトルを表示（縦書き・横書き共通） ===== */
@@ -3207,7 +3177,7 @@
 <script>
 (function () {
   /* 縦書き（横スクロール）かどうか。モバイル幅は横書き（縦スクロール） */
-  window.sodVert = function () { return !(window.matchMedia && window.matchMedia("(max-width: 760px)").matches); };
+  window.sodVert = function () { return true; };
   /* ===== 星空・流れ星（site2 から移植。夜明けは --dawn / --star-mul で連動） ===== */
   function createSkyStars(n) {
     document.querySelectorAll(".sky-star").forEach(function (el) { el.remove(); });
