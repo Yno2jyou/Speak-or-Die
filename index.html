@@ -1254,19 +1254,12 @@
   body:not(.rv-on) #honbun .section-title::after { transform: scaleX(1); }
 
   /* 段落の出現 */
+  /* 段落の出現は opacity だけ（段落ごとに transform / blur を使うと、スマホでレイヤーが大量に作られ重くなる） */
   #honbun .rv {
     opacity: 0;
-    transform: translate3d(0, 14px, 0);
-    transition: opacity 1.4s ease, transform 1.4s cubic-bezier(.16,.84,.24,1);
-    transition-delay: var(--d, 0ms);
+    transition: opacity 1.2s ease;
   }
-  #honbun .rv.is-in { opacity: 1; transform: none; }
-  #honbun .section-title.rv {
-    filter: blur(6px);
-    transition: opacity 1s ease, transform 1.1s cubic-bezier(.16,.84,.24,1), filter 1s ease;
-    transition-delay: var(--d, 0ms);
-  }
-  #honbun .section-title.rv.is-in { filter: blur(0); }
+  #honbun .rv.is-in { opacity: 1; }
   body.is-editing #honbun .rv {
     opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important;
   }
@@ -1378,6 +1371,16 @@
 
   @media (max-width: 1079px) {
     .chapter-rail { display: none; }
+  }
+
+  /* スマホ・タッチ端末の閲覧中は、画面全体に掛かる重い演出を止める */
+  @media (max-width: 760px), (pointer: coarse) {
+    body.reading #grain,
+    body.reading #synapse-canvas,
+    body.reading .sky-star,
+    body.reading .shooting-star { display: none; }
+    body.reading #nebula { filter: none; animation: none; will-change: auto; transform: none; opacity: .8; }
+    body.reading .reader-veil::before { animation: none; }
   }
   @media (max-width: 480px) {
     #landing { padding: 62px 18px 52px; }
@@ -1499,8 +1502,15 @@
   }
   .landing-enter::after { left: 18%; right: 18%; bottom: 5px; }
 
+  @keyframes ln-rule-m { from { width: 0 } to { width: min(148px, var(--la)) } }
+
   @media (max-width: 760px) {
     #landing {
+      /* 左ブロックに使える幅を画面幅から計算し、前書きが必ず収まる文字サイズにする */
+      --lp: 12px;
+      --lt: clamp(22px, 6.6vw, 30px);
+      --lg: clamp(14px, 4.6vw, 40px);
+      --la: calc((100vw - 2 * var(--lp) - var(--lt) - 2 * var(--lg)) / 2);
       height: auto; min-height: 100vh; min-height: 100svh;
       overflow: visible;
       display: grid;
@@ -1508,8 +1518,8 @@
       grid-template-rows: auto auto;
       align-content: safe center;
       align-items: center;
-      column-gap: 60px;
-      padding: 78px 20px 92px;
+      column-gap: var(--lg);
+      padding: 78px var(--lp) 92px;
     }
     .ln-spine { display: none; }
     .ln-side {
@@ -1525,14 +1535,26 @@
       align-self: center;
       writing-mode: vertical-rl; text-orientation: upright;
       white-space: nowrap;
-      font-size: clamp(24px, 7.5vw, 34px);
+      font-size: var(--lt);
       letter-spacing: .3em;
       line-height: 1;
       padding: 0; margin: 0;
     }
-    #landing .landing-sub { text-align: right; margin: 0 0 12px; font-size: 12px; }
-    #landing .landing-rule { margin: 0 0 16px auto; width: 0; }
-    #landing .landing-epigraph { text-align: right; font-size: 11.5px; line-height: 1.8; }
+    #landing .landing-sub {
+      text-align: right; margin: 0 0 12px; white-space: nowrap;
+      letter-spacing: .06em;
+      font-size: min(12px, calc(var(--la) / 9));
+    }
+    #landing .landing-rule {
+      margin: 0 0 16px auto;
+      width: min(148px, var(--la));
+      animation: ln-rule-m 1.4s cubic-bezier(.2,.8,.2,1) .95s both;
+    }
+    #landing .landing-epigraph {
+      text-align: right; line-height: 1.8;
+      letter-spacing: .02em;
+      font-size: min(12px, calc(var(--la) / 15.8));
+    }
     #landing .landing-epigraph span { white-space: nowrap; }
     #landing .landing-epigraph .indent { padding-left: 0; }
     .landing-enter {
@@ -1549,6 +1571,39 @@
     .landing-title .ch { transform: none !important; }
     #landing .landing-rule { width: 148px !important; }
   }
+</style>
+<style>
+  /* ===== 軽量化 & トップ見切れ対策（上書き） ===== */
+  #landing {
+    height: 100vh; height: 100dvh; min-height: 0;
+    overflow-x: hidden; overflow-y: auto;
+    align-content: safe center;
+    padding-bottom: 10vh;
+  }
+  .landing-title {
+    font-size: clamp(18px, min(3.4vw, 4.2vh), 44px);
+    letter-spacing: .24em;
+    padding-top: 3vh; padding-bottom: 3vh;
+  }
+  .landing-enter { bottom: 4vh; }
+  @media (max-width: 760px) {
+    #landing { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; padding-top: 72px; padding-bottom: 96px; }
+    .landing-title { font-size: min(var(--lt), 4.4dvh); padding: 0; }
+  }
+  #honbun .rv, #honbun .rv.is-in { opacity: 1 !important; transition: none !important; }
+  body.reading #grain,
+  body.reading #synapse-canvas,
+  body.reading #vignette,
+  body.reading #bloom,
+  body.reading .sky-star,
+  body.reading .shooting-star { display: none !important; }
+  body.reading::before, body.reading::after { display: none; }
+  body.reading #nebula { filter: none; animation: none; will-change: auto; transform: none; opacity: .8; }
+  body.reading .reader-veil::before { animation: none; }
+  body.reading .chapter-chip,
+  body.reading #toc,
+  body.reading .site-menu-btn { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  body.reading #honbun { will-change: scroll-position; }
 </style>
 </head>
 <body>
@@ -3119,7 +3174,7 @@
   }
 
   function currentDawn() {
-    return parseFloat(getComputedStyle(document.body).getPropertyValue("--dawn")) || 0;
+    return parseFloat(document.body.dataset.dawnQ) || 0;
   }
 
   function spawnShootingStar() {
@@ -3601,8 +3656,11 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (awClean) {
       awClean.querySelectorAll(".aw-title").forEach(function (n) { n.parentNode.removeChild(n); });
     }
-    if (c.mainHtml && mainEl) {
+    if (c.mainHtml && mainEl && !document.body.classList.contains("is-editing") && c.mainHtml !== window.__sodLastMainHtml) {
+      window.__sodLastMainHtml = c.mainHtml;
+      var _sl = mainEl.scrollLeft;
       mainEl.innerHTML = c.mainHtml;
+      mainEl.scrollLeft = _sl;
       /* 保存HTMLに残った古い表示状態を消し、段落フェードを必ず作り直す */
       mainEl.querySelectorAll("*").forEach(function (n) {
         n.classList.remove("rv", "is-in");
@@ -3802,8 +3860,8 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (!reader || reader.classList.contains("is-hidden")) {
       if (progressBar) progressBar.style.width = "0%";
       document.body.dataset.dawnQ = "0.00";
-      document.body.style.setProperty("--dawn", "0");
-      document.body.style.setProperty("--star-mul", "1");
+      var dl0 = document.getElementById("dawn-layer");
+      if (dl0) dl0.style.opacity = "0";
       document.body.classList.remove("is-dawn");
       return;
     }
@@ -3824,22 +3882,25 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     var dawn = t * t;
     if (dawn < 0.015) dawn = 0;
     if (dawn > 1) dawn = 1;
-    dawn = Math.round(dawn / 0.02) * 0.02;
-    var starMul = Math.max(0.05, 1 - dawn * 0.95);
-    var dawnStr = dawn.toFixed(2), starStr = starMul.toFixed(2);
+    dawn = Math.round(dawn / 0.04) * 0.04;
+    if (dawn > 1) dawn = 1;
+    var dawnStr = dawn.toFixed(2);
     var bodyEl = document.body;
     if (bodyEl.dataset.dawnQ !== dawnStr) {
       bodyEl.dataset.dawnQ = dawnStr;
-      bodyEl.style.setProperty("--dawn", dawnStr);
-      bodyEl.style.setProperty("--star-mul", starStr);
+      var dl = document.getElementById("dawn-layer");
+      if (dl) dl.style.opacity = dawnStr;
       bodyEl.classList.toggle("is-dawn", dawn >= 0.92);
     }
     try {
-      var p = loadProgress();
-      if (pct - (p.maxPct || 0) >= 2) { p.maxPct = pct; saveProgress(p); }
+      if (maxPctCache === null) maxPctCache = loadProgress().maxPct || 0;
+      if (pct - maxPctCache >= 2) {
+        var p = loadProgress(); p.maxPct = pct; saveProgress(p); maxPctCache = pct;
+      }
     } catch (e) {}
   }
   var progRaf = 0;
+  var maxPctCache = null;
   function requestProgress() {
     if (progRaf) return;
     progRaf = requestAnimationFrame(function () { progRaf = 0; updateProgress(); });
@@ -4706,13 +4767,22 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   /* 段落は一つずつ順番に出現させる（まとめて一斉に出ないように） */
   var rvPending = [];
   var rvWaiting = [];
+  var rvVisible = new Set();
   var rvPumping = false;
   function rvPump() {
-    var el = rvPending.shift();
+    var el;
+    /* 待っている間に画面外へ出た段落は、演出なしで即座に表示済みにする */
+    while ((el = rvPending.shift())) {
+      if (rvVisible.has(el)) break;
+      el.classList.add("is-in");
+      if (rvIO) rvIO.unobserve(el);
+    }
     if (!el) { rvPumping = false; return; }
     el.classList.add("is-in");
     if (rvIO) rvIO.unobserve(el);
-    setTimeout(rvPump, 260);
+    rvVisible.delete(el);
+    /* 溜まっているほど間隔を詰める（早いスクロールに追従） */
+    setTimeout(rvPump, Math.max(30, 200 - rvPending.length * 25));
   }
   function rvQueue(el) {
     if (!el || el.classList.contains("is-in") || el.getAttribute("data-rvq")) return;
@@ -4726,6 +4796,8 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (document.body.classList.contains("is-editing")) return;
     collect();
     buildRail();
+    document.body.classList.remove("rv-on");
+    return;
     var items = Array.prototype.slice.call(main.querySelectorAll(".section > p, .section > .section-title"));
     if (!("IntersectionObserver" in window)) {
       items.forEach(function (el) { el.classList.add("rv", "is-in"); });
@@ -4735,7 +4807,11 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     if (!rvIO) {
       /* 閲覧画面は #honbun が横スクロールの枠になるため、枠自体を root にして監視する */
       rvIO = new IntersectionObserver(function (entries) {
-        var hit = entries.filter(function (en) { return en.isIntersecting; }).map(function (en) { return en.target; });
+        var hit = [];
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { rvVisible.add(en.target); hit.push(en.target); }
+          else rvVisible.delete(en.target);
+        });
         hit.sort(function (a, b) { return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1; });
         hit.forEach(rvQueue);
       }, { root: main, rootMargin: "0px", threshold: [0, 0.01] });
@@ -4754,6 +4830,8 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 
   /* ---------- 6. スクロール同期（視差・チップ・レール） ---------- */
   var ticking = false;
+  var sweepT = 0;
+  var padRCache = null;
 
   /* 視界に入っているのに is-in が付いていない段落を、位置から直接判定して表示する。
      IntersectionObserver は縦組み＋横スクロールの中で通知を取りこぼすことがあるため、その保険。 */
@@ -4777,17 +4855,16 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
 
   function updateScroll() {
     ticking = false;
-    document.documentElement.style.setProperty("--sy", "0px");
     var reading = document.body.classList.contains("reading");
     var cont = document.getElementById("honbun");
-    sweepReveal(cont);
     if (!reading || !cont || !sections.length) {
       document.body.classList.remove("chip-on");
       return;
     }
     /* 紙面の右端が読み位置。右端にいる章を現在章とする */
     var cRect = cont.getBoundingClientRect();
-    var padR = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
+    if (padRCache === null) padRCache = parseFloat(window.getComputedStyle(cont).paddingRight) || 0;
+    var padR = padRCache;
     var head = cRect.right - padR;
     var idx = 0, sr = null;
     for (var i = 0; i < sections.length; i++) {
@@ -4823,6 +4900,30 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   if (honbunEl) honbunEl.addEventListener("scroll", requestScroll, { passive: true });
 
   /* ---------- 7. 閲覧画面かどうかの同期 ---------- */
+  /* 読書位置はこのタブの中だけ覚える。再読み込みされても続きから開く */
+  var bootDone = false;
+  var posT = 0;
+  function restorePos(hb) {
+    var v = NaN;
+    try { v = parseFloat(sessionStorage.getItem("sod-pos")); } catch (e) {}
+    if (!isFinite(v) || v === 0) return;
+    var go = function () { hb.scrollLeft = v; requestScroll(); };
+    go();
+    setTimeout(go, 300);
+    window.addEventListener("load", function () { setTimeout(go, 100); }, { once: true });
+  }
+  function savePos() {
+    posT = 0;
+    var hb = document.getElementById("honbun");
+    if (!hb || !document.body.classList.contains("reading")) return;
+    try { sessionStorage.setItem("sod-pos", String(hb.scrollLeft)); } catch (e) {}
+  }
+  if (document.getElementById("honbun")) {
+    document.getElementById("honbun").addEventListener("scroll", function () {
+      if (posT) clearTimeout(posT);
+      posT = setTimeout(savePos, 400);
+    }, { passive: true });
+  }
   function syncReading() {
     var reader = document.getElementById("reader-shell");
     var on = !!reader && !reader.classList.contains("is-hidden");
@@ -4830,7 +4931,10 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
     document.body.classList.toggle("reading", on);
     if (on && !wasOn) {
       var hb = document.getElementById("honbun");
-      if (hb) hb.scrollLeft = 0;
+      if (hb) {
+        hb.scrollLeft = 0;
+        if (!bootDone) restorePos(hb);
+      }
     }
     document.body.classList.toggle(
       "rail-on",
@@ -4862,6 +4966,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   }
 
   window.addEventListener("resize", function () {
+    padRCache = null;
     requestScroll();
     syncReading();
   });
@@ -4896,8 +5001,13 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
       }
     }
 
+    var lite = window.matchMedia ? window.matchMedia("(max-width: 760px), (pointer: coarse)") : null;
     function draw(t) {
       raf = 0;
+      if (lite && lite.matches && document.body.classList.contains("reading")) {
+        setTimeout(start, 500);
+        return;
+      }
       if (!reduce && last && t - last < 32) {
         raf = requestAnimationFrame(draw);
         return;
@@ -4960,6 +5070,7 @@ window.dispatchEvent(new Event("sod-firebase-ready"));
   buildRail();
   initReveal();
   syncReading();
+  bootDone = true;
   window.addEventListener("load", function () { splitTitle(); syncReading(); });
 })();
 </script>
